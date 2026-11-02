@@ -3,6 +3,10 @@ FEATURES <- c("age_z", "log_fare_z", "family_size_z", "age_missing",
 NUMERIC_FEATURES <- FEATURES[1:3]
 SEED <- 20261014L
 MODELS <- c("Prevalence baseline", "Random forest", "Bayesian logistic")
+# Committed titanic3 extract and grouped split (see data/provenance.json).
+N_RECORDS <- 1309L
+N_TRAIN <- 1048L
+N_TEST <- 261L
 
 check_packages <- function() {
   required <- c("arules", "randomForest", "pROC", "jsonlite", "ggplot2")
@@ -15,11 +19,12 @@ load_inputs <- function(root = ".") {
   d <- read.csv(file.path(root, "data", "passengers.csv"),
                 na.strings = c("", "NA"), stringsAsFactors = FALSE)
   s <- read.csv(file.path(root, "data", "split.csv"), stringsAsFactors = FALSE)
-  stopifnot(nrow(d) == 891L, !anyDuplicated(d$PassengerId),
+  stopifnot(nrow(d) == N_RECORDS, !anyDuplicated(d$PassengerId),
             !anyDuplicated(s$PassengerId), setequal(d$PassengerId, s$PassengerId))
   s <- s[match(d$PassengerId, s$PassengerId), ]
   stopifnot(all(s$subset %in% c("train", "test")),
-            sum(s$subset == "train") == 712L, sum(s$subset == "test") == 179L,
+            sum(s$subset == "train") == N_TRAIN, sum(s$subset == "test") == N_TEST,
+            all(d$Survived %in% 0:1),
             all(s$cv_fold[s$subset == "train"] %in% 0:4),
             setequal(s$cv_fold[s$subset == "train"], 0:4))
   validate_groups(s)
@@ -39,7 +44,8 @@ validate_groups <- function(s) {
 
 numeric_values <- function(d, age_median, fare_median) {
   age <- ifelse(is.na(d$Age), age_median, d$Age)
-  fare <- ifelse(is.na(d$Fare), fare_median, d$Fare)
+  # Fare is recorded per ticket; FarePerPerson divides it by the ticket's group size.
+  fare <- ifelse(is.na(d$FarePerPerson), fare_median, d$FarePerPerson)
   if (any(!is.finite(age)) || any(!is.finite(fare)) || any(fare < 0))
     stop("Age/fare cannot be transformed.")
   cbind(age_z = age, log_fare_z = log1p(fare),
@@ -48,7 +54,7 @@ numeric_values <- function(d, age_median, fare_median) {
 
 fit_preprocessing <- function(d) {
   age <- median(d$Age, na.rm = TRUE)
-  fare <- median(d$Fare, na.rm = TRUE)
+  fare <- median(d$FarePerPerson, na.rm = TRUE)
   embark <- d$Embarked[!is.na(d$Embarked) & nzchar(d$Embarked)]
   if (!length(embark)) stop("Training embarkation values are all missing.")
   frequencies <- table(embark)
@@ -142,7 +148,9 @@ score_predictions <- function(y, probability) {
   stopifnot(length(y) == length(probability), all(y %in% 0:1),
             all(is.finite(probability)), all(probability >= 0 & probability <= 1),
             length(unique(y)) == 2L)
-  clipped <- pmin(pmax(probability, 1e-15), 1 - 1e-15)
+  # sklearn >= 1.5 log_loss clips at machine epsilon; match it exactly.
+  eps <- .Machine$double.eps
+  clipped <- pmin(pmax(probability, eps), 1 - eps)
   positive <- probability >= .5
   c(roc_auc = as.numeric(pROC::auc(pROC::roc(y, probability, levels = c(0, 1),
                                            direction = "<", quiet = TRUE))),
@@ -174,9 +182,9 @@ rule_items <- function(d) {
   age <- ifelse(is.na(d$Age), "Unknown",
                 ifelse(d$Age < 16, "Child (<16)",
                        ifelse(d$Age < 60, "Adult (16-59)", "Older (60+)")))
-  fare <- ifelse(is.na(d$Fare), "Unknown",
-                 ifelse(d$Fare <= 10, "Low (<=10)",
-                        ifelse(d$Fare <= 30, "Middle (10-30)", "High (>30)")))
+  fare <- ifelse(is.na(d$FarePerPerson), "Unknown",
+                 ifelse(d$FarePerPerson <= 10, "Low (<=10)",
+                        ifelse(d$FarePerPerson <= 30, "Middle (10-30)", "High (>30)")))
   family <- d$SibSp + d$Parch + 1
   family <- ifelse(family == 1, "Alone", ifelse(family <= 4, "2-4", "5+"))
   lapply(seq_len(nrow(d)), function(i) {
@@ -226,6 +234,13 @@ mine_rules <- function(train, support = .04, confidence = .60,
                          result$consequent, method = "radix"), ]
   rownames(result) <- NULL
   result
+}
+
+missingness_table <- function(d) {
+  # Every loaded field except the joined split bookkeeping columns.
+  fields <- setdiff(names(d), c("subset", "cv_fold", "ticket_group"))
+  data.frame(field = fields, n_missing = colSums(is.na(d[fields])),
+             pct_missing = colMeans(is.na(d[fields])), row.names = NULL)
 }
 
 bayesian_rates <- function(d) {
@@ -288,14 +303,15 @@ make_plots <- function(d, train, test, final, metrics, coefficients, rates, rule
          scale_y_continuous(labels = function(x) paste0(round(x * 100), "%"),
                             limits = c(0, 1.09)) +
          labs(title = "Who is represented in these historical records?",
-              subtitle = "891 labeled records, not the complete manifest; descriptive, not causal",
+              subtitle = paste(format(nrow(d), big.mark = ","),
+                               "titanic3 passenger records; crew excluded; descriptive, not causal"),
               x = "Passenger class", y = "Observed survival proportion", fill = "Recorded sex"))
   score_names <- c("roc_auc", "brier", "log_loss", "balanced_accuracy")
   long <- do.call(rbind, lapply(score_names, function(metric)
     data.frame(metrics[c("phase", "fold", "model")], metric = metric,
                value = metrics[[metric]])))
   long$phase <- ifelse(long$phase == "cv", "Development: five validation folds",
-                       "Held-out test (179 records)")
+                       paste0("Held-out test (", nrow(test), " records)"))
   save("performance", ggplot(long, aes(model, value, color = model)) +
          geom_point(position = position_jitter(width = .10, height = 0, seed = SEED),
                     size = 2.4) +
@@ -350,7 +366,8 @@ make_plots <- function(d, train, test, final, metrics, coefficients, rates, rule
          geom_text(aes(label = paste0("n=", n)), nudge_y = .25, size = 3) +
          xlim(0, 1) +
          labs(title = "Descriptive Bayesian rates: sex by passenger class",
-              subtitle = "All 891 labeled records; Beta(1,1) prior; exact central 95% beta credible intervals",
+              subtitle = paste("All", format(nrow(d), big.mark = ","),
+                               "labeled records; Beta(1,1) prior; exact central 95% beta credible intervals"),
               x = "Survival proportion posterior", y = NULL))
   if (nrow(rules)) {
     top <- head(rules, 10)
@@ -379,6 +396,7 @@ run_analysis <- function(root = ".") {
   out <- file.path(root, "outputs", "r")
   dir.create(out, recursive = TRUE, showWarnings = FALSE)
   rows <- list()
+  cv_predictions <- list()
   for (fold in 0:4) {
     assessment <- train[folds == fold, ]
     fitted <- fit_models(train[folds != fold, ], assessment)
@@ -386,6 +404,9 @@ run_analysis <- function(root = ".") {
       scores <- score_predictions(assessment$Survived, fitted$probabilities[[model]])
       rows[[length(rows) + 1L]] <- data.frame(
         phase = "cv", fold = fold, model = model, as.list(scores), check.names = FALSE)
+      cv_predictions[[length(cv_predictions) + 1L]] <- data.frame(
+        PassengerId = assessment$PassengerId, Survived = assessment$Survived, model = model,
+        probability = fitted$probabilities[[model]], fold = fold)
     }
   }
   final <- fit_models(train, test)
@@ -401,10 +422,10 @@ run_analysis <- function(root = ".") {
   coefficients <- coefficient_table(final$bayes)
   rules <- mine_rules(train)
   rates <- bayesian_rates(d)
-  missingness <- data.frame(field = names(d), n_missing = colSums(is.na(d)),
-                            pct_missing = colMeans(is.na(d)), row.names = NULL)
+  missingness <- missingness_table(d)
   tables <- list(metrics = metrics, predictions = predictions, coefficients = coefficients,
                  rules = rules, bayesian_rates = rates, missingness = missingness,
+                 cv_predictions = do.call(rbind, cv_predictions),
                  design_train = data.frame(PassengerId = train$PassengerId, final$x_train),
                  design_test = data.frame(PassengerId = test$PassengerId, final$x_assessment))
   for (name in names(tables)) write_csv(tables[[name]], file.path(out, paste0(name, ".csv")))
@@ -414,6 +435,13 @@ run_analysis <- function(root = ".") {
   jsonlite::write_json(prep_json, file.path(out, "preprocessing.json"),
                        auto_unbox = TRUE, pretty = TRUE, digits = 17)
   make_plots(d, train, test, final, metrics, coefficients, rates, rules, out)
+  if (!exists("run_audit", mode = "function"))
+    sys.source(file.path(root, "R", "audit.R"), envir = environment(run_analysis))
+  started <- proc.time()[["elapsed"]]
+  audit <- run_audit(d, root, out)
+  tables <- c(tables, audit)
+  message(sprintf("R audit complete in %.1f s: %d audit tables.",
+                  proc.time()[["elapsed"]] - started, length(audit)))
   writeLines(c(capture.output(sessionInfo()),
                paste("Seed:", SEED),
                paste("Final MAP maximum absolute gradient:", format(final$bayes$gradient, digits = 17)),

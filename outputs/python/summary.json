@@ -1,13 +1,13 @@
 {
   "seed": 20261014,
-  "n": 891,
-  "train_n": 712,
-  "test_n": 179,
-  "survived": 342,
-  "rule_count": 46,
-  "bayesian_max_abs_gradient": 6.47414066801133e-12,
+  "n": 1309,
+  "train_n": 1048,
+  "test_n": 261,
+  "survived": 500,
+  "rule_count": 45,
+  "bayesian_max_abs_gradient": 2.356694440291962e-11,
   "bayesian_optimizer_success": true,
   "bayesian_optimizer_message": "Optimization terminated successfully.",
   "prediction_type": "Posterior-mode plug-in; Laplace marginal coefficient intervals",
-  "coverage": "891 labeled records; not the complete Titanic manifest"
+  "coverage": "1,309 titanic3 passenger records; crew excluded"
 }

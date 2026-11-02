@@ -1,8 +1,11 @@
-# Python / Titanic patterns
+# Python / The Rule in the Data
 
-A complete offline companion to the R-first historical case study. Read the
-root `METHODOLOGY.md` and data provenance before interpreting results. The input
-is a pinned public 891-record labeled sample, **not the full ship manifest**.
+This is the Python reference implementation. The R edition reproduces every
+deterministic table, and `scripts/check_parity.py` verifies that they match.
+Read the root `METHODOLOGY.md` before interpreting any result.
+
+The input is 1,309 titanic3 passengers; crew are not included. The audit also
+reads a clearly labelled **synthetic** promotion dataset.
 
 ## Run on Windows (Python 3.11)
 
@@ -11,48 +14,63 @@ From the repository root:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m Python.run_analysis
-.\.venv\Scripts\python.exe -m pytest tests\test_python_analysis.py
+.\.venv\Scripts\python.exe -m Python.run_analysis        # about 90 s
+.\.venv\Scripts\python.exe -m pytest tests\test_python_analysis.py tests\test_audit.py
 .\.venv\Scripts\python.exe -m Python.make_notebook
 .\.venv\Scripts\python.exe -m Python.execute_notebook
 ```
 
-No Kaggle account, API key, or runtime internet access is needed after installing
-dependencies. The notebook calls the same tested functions as the CLI; rerunning
-it deterministically regenerates the outputs. Forest parallelism is bounded at
-two workers. `requirements-resolved.txt` under `outputs/python/` records the
-actual environment used for the checked-in execution.
+- After the dependencies are installed, no runtime internet access is needed.
+- Forest parallelism is bounded at two workers.
+- `outputs/python/requirements-resolved.txt` records the exact environment.
 
-## What is estimated?
+## Modules
 
-- **Describe:** full-sample sex-by-class Beta(1,1) posterior rates, exact central
-  beta intervals, observed counts and missingness. These are not test results.
-- **Discover:** Apriori itemsets up to length three, only in 712 training
-  records. Survival is the singleton RHS; maximum two predictor items on LHS.
-  Thresholds are support .04, confidence .60, joint count 20, and lift 1.0.
-  They are exploratory filters, not multiple-testing-adjusted significance.
-- **Predict:** prevalence, a fixed 500-tree forest, and normal-prior Bayesian
-  logistic regression on the committed grouped folds and 179 held-out records.
-  Imputation and sample-SD standardization are relearned inside each fold.
-- **Quantify:** logistic posterior mode plus inverse analytic Hessian (Laplace);
-  approximate marginal 95% coefficient credible intervals, not simultaneous
-  intervals, MCMC draws or exact-posterior intervals. Predictions use the
-  posterior-mode plug-in, **not** integrated posterior prediction.
+### `analysis.py`: the original lenses
 
-`outputs/python/` contains high-precision CSVs: fold/test metrics, test-only
-predictions, coefficients, train/test design matrices, rules, descriptive rates,
-missingness, plus preprocessing metadata and convergence summary. Additional
-`cv_predictions.csv` and five-bin `calibration.csv` make diagnostics auditable.
-The notebook and four static PNG exhibits are generated from actual results.
+This module uses the 1,048 / 261 holdout.
+
+- **Rates:** Beta(1,1) sex × class rates.
+- **Rules:** Apriori on training rows only.
+- **Models:** a prevalence baseline, a 500-tree forest and a Laplace Bayesian
+  logistic model.
+- **Diagnostics:** right-closed five-bin calibration.
+- **Fare:** per-person throughout.
+
+### `audit.py`: the people-science audit
+
+- **Policy-recovery models:** policy, structure, combined, sex-blind and
+  sex-blind + title. All are Laplace logistic models, with a random-forest
+  benchmark.
+- **Evaluation:** 20 × 5 repeated grouped cross-validation with Nadeau–Bengio
+  paired intervals.
+- **Proxy tests:** the proxy gap and sex recovery.
+- **Fairness audit:** impact ratios, per-group calibration and error rates,
+  with small cells suppressed.
+- **Descriptive history:** the policy groups, child cutoffs, boat side and
+  missing age.
+- **Synthetic simulation:** checks the audit against the known injected bias.
+
+## Outputs (`outputs/python/`)
+
+All CSVs are written at full precision; empty cells are NaN, meaning
+suppressed or undefined.
+
+| Group | Files |
+|---|---|
+| Original lenses | `metrics`, `predictions`, `cv_predictions`, `calibration`, `coefficients`, `rules`, `bayesian_rates`, `missingness`, `design_*` |
+| Model comparison | `cv_scores`, `oof_mean`, `model_comparison`, `policy_fit`, `policy_coefficients` |
+| Proxies and audit | `proxy_gap`, `sex_recovery`, `fairness_audit` |
+| History | `policy_groups`, `child_cutoffs`, `boat_side`, `missing_age` |
+| Simulation | `sim_coefficients`, `sim_gap`, `sim_recovery`, `sim_impact` |
 
 ## Limits
 
-Sex, class, age and fare are historically correlated. Adjusted coefficients and
-association rules cannot establish causes or explain individual fates.
-Selection, missing records, small subgroups and shared-ticket dependence limit
-generalization. Ticket groups are not perfect families/social groups. The test
-set is small: metric differences do not establish a universal winner. Forests
-differ across language implementations; Bayesian design and mode should agree
-numerically. No personal prediction simulator, deployment or rescue
-recommendations are provided, and these historical differences do not justify
-discriminatory decisions.
+- **Associations, not causes.** Coefficients and rules describe the record,
+  not why anyone lived or died. The models learn a historical decision; they
+  are not a guide to who "should" be selected.
+- **Laplace intervals.** Intervals are approximate and marginal; there are no
+  MCMC draws.
+- **Forest parity.** Forest results differ between languages by design.
+- **Simulation.** The synthetic data are illustrative. They show the audit can
+  recover a planted bias, not how any real organisation behaves.

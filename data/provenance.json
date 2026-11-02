@@ -1,34 +1,44 @@
 {
-  "source_url": "https://raw.githubusercontent.com/paulhendricks/titanic/53be2fd391100044594de004d559858077a10c43/inst/data-raw/train.csv",
-  "source_revision": "53be2fd391100044594de004d559858077a10c43",
-  "source_sha256": "7d118fef8b6ccf7f81111877bc388536f7b1e498a655e3d649d19aaa010e9f6f",
-  "source_package_license": "CC0",
-  "license_declaration": "https://github.com/paulhendricks/titanic/blob/53be2fd391100044594de004d559858077a10c43/DESCRIPTION",
-  "upstream_context": "https://www.kaggle.com/competitions/titanic",
-  "rows": 891,
-  "survived": 342,
+  "source_url": "https://hbiostat.org/data/repo/titanic3.csv",
+  "source_sha256": "db6df9666818c69a753cd85d743e01502c8518b00579b6aada0d4fc5a66ccb9d",
+  "source_name": "titanic3 (Thomas Cason, from Encyclopedia Titanica, state of 2 August 1999)",
+  "source_page": "https://hbiostat.org/data/repo/titanic.html",
+  "terms": "https://hbiostat.org/data/ - 'Permission is granted to anyone wishing to use the data sets provided here.'",
+  "required_credit": "Data obtained from http://hbiostat.org/data courtesy of the Vanderbilt University Department of Biostatistics.",
+  "upstream_note": "Built from Encyclopedia Titanica, whose own content is not necessarily public domain; this repository therefore commits no names or biographical text.",
+  "rows": 1309,
+  "survived": 500,
+  "coverage": "Passengers only (crew excluded); not the complete ship's company",
+  "kaggle_source_url": "https://raw.githubusercontent.com/paulhendricks/titanic/53be2fd391100044594de004d559858077a10c43/inst/data-raw/train.csv",
+  "kaggle_source_sha256": "7d118fef8b6ccf7f81111877bc388536f7b1e498a655e3d649d19aaa010e9f6f",
+  "kaggle_rows_matched": 891,
+  "kaggle_fields_identical": [
+    "Survived",
+    "Sex",
+    "Pclass"
+  ],
+  "kaggle_survived": 342,
   "split_seed": 20261014,
   "split_method": "StratifiedGroupKFold; first outer fold held out",
   "grouping": "Shared ticket strings, replaced by invented group identifiers",
-  "train_rows": 712,
-  "test_rows": 179,
-  "train_survived": 273,
-  "test_survived": 69,
-  "retained_columns": [
-    "PassengerId",
-    "Survived",
-    "Pclass",
-    "Sex",
-    "Age",
-    "SibSp",
-    "Parch",
-    "Fare",
-    "Embarked"
-  ],
+  "train_rows": 1048,
+  "test_rows": 261,
+  "train_survived": 400,
+  "test_survived": 100,
+  "repeated_cv": "20 repeats x 5 StratifiedGroupKFold folds over all rows; seeds 20261114..20261133",
+  "derived_columns": {
+    "TicketSize": "Rows in titanic3 sharing the ticket string",
+    "FarePerPerson": "Fare / TicketSize (Fare is recorded per ticket, not per person)",
+    "Title": "Mr / Mrs (incl. Mme) / Miss (incl. Mlle, Ms) / Master / Rare; name discarded",
+    "BoatSide": "Recorded boat mapped to Starboard (odd, A, C) or Port (even, B, D); descriptive only, never a predictor",
+    "InKaggleTrain": "1 if the passenger is in the 891-row Kaggle training sample"
+  },
   "excluded_at_ingest": [
-    "Name",
-    "Ticket",
-    "Cabin"
-  ],
-  "scope": "891 labeled historical passenger records, not the full ship manifest"
+    "name",
+    "ticket",
+    "cabin",
+    "boat",
+    "body",
+    "home.dest"
+  ]
 }

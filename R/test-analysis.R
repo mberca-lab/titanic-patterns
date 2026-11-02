@@ -1,4 +1,5 @@
 source(file.path("R", "analysis.R"))
+source(file.path("R", "audit.R"))
 check_packages()
 if (!requireNamespace("testthat", quietly = TRUE)) stop("testthat is required.")
 library(testthat)
@@ -22,7 +23,8 @@ fixture <- data.frame(
   PassengerId = 1:4, Survived = c(0, 1, 0, 1), Pclass = c(1, 2, 3, 1),
   Sex = c("female", "male", "male", "female"),
   Age = c(10, 20, NA, 30), SibSp = c(0, 1, 0, 0), Parch = c(0, 0, 0, 1),
-  Fare = c(10, 30, NA, 20), Embarked = c("S", "C", NA, NA))
+  Fare = c(10, 30, NA, 20), FarePerPerson = c(10, 30, NA, 20),
+  Embarked = c("S", "C", NA, NA))
 
 test_that("preprocessing learns only fit rows, with sample SD and explicit missingness", {
   prep <- fit_preprocessing(fixture)
@@ -45,7 +47,7 @@ test_that("preprocessing learns only fit rows, with sample SD and explicit missi
   expect_gt(assessed[1, "age_z"], 100)
   constant <- fixture
   constant$Age <- 20
-  constant$Fare <- 10
+  constant$Fare <- constant$FarePerPerson <- 10
   constant$SibSp <- constant$Parch <- 0
   expect_equal(unname(fit_preprocessing(constant)$scales), rep(1, 3))
 })
@@ -122,7 +124,7 @@ test_that("rule counts and categories use raw records and never put outcome on t
 test_that("descriptive beta posterior uses exact conjugate updates", {
   inputs <- load_inputs(".")
   rates <- bayesian_rates(inputs$data)
-  expect_equal(sum(rates$n), 891)
+  expect_equal(sum(rates$n), N_RECORDS)
   expect_equal(sum(rates$survived), sum(inputs$data$Survived))
   expect_equal(rates$posterior_mean, (rates$survived + 1) / (rates$n + 2))
   expect_equal(rates$lower, qbeta(.025, rates$survived + 1, rates$n - rates$survived + 1))
@@ -138,7 +140,7 @@ test_that("pipeline exports complete held-out schemas and ordered designs", {
                                   "log_loss", "balanced_accuracy", "n"))
   expect_equal(nrow(metrics), 18)
   expect_equal(sort(unique(metrics$fold)), -1:4)
-  expect_equal(nrow(predictions), 179 * 3)
+  expect_equal(nrow(predictions), N_TEST * 3)
   expect_equal(names(predictions), c("PassengerId", "Survived", "model", "probability"))
   expect_true(all(table(predictions$PassengerId) == 3))
   inputs <- load_inputs(".")
@@ -159,5 +161,79 @@ test_that("CSV numerical exports retain seventeen significant digits", {
   write_csv(data.frame(value = c(pi, 1 / 3)), path)
   expect_equal(readLines(path)[-1], sprintf("%.17g", c(pi, 1 / 3)))
   expect_equal(read.csv(path)$value, c(pi, 1 / 3), tolerance = 1e-16)
+})
+test_that("Nadeau-Bengio interval inflates the naive resampling standard error", {
+  d <- c(.01, .03, -.02, .04, .02, .00, .01, .05, -.01, .03)
+  nb <- nadeau_bengio(d, 1 / 4)
+  expect_equal(unname(nb["se"]), sqrt((1 / 10 + 1 / 4) * var(d)))
+  expect_gt(unname(nb["se"]), sd(d) / sqrt(length(d)))
+  q <- qt(.975, 9)
+  expect_equal(unname(nb[c("lower", "upper")]), mean(d) + c(-1, 1) * q * unname(nb["se"]))
+})
+
+test_that("Wilson and Katz intervals handle zero counts like the Python edition", {
+  interval <- wilson(0, 10)
+  expect_equal(interval[1], 0, tolerance = 1e-15)
+  expect_true(interval[2] > 0 && interval[2] < .35)
+  expect_true(all(is.na(wilson(0, 0))))
+  ratio <- katz_ratio(20, 100, 40, 100)
+  expect_equal(ratio[1], .5)
+  expect_true(ratio[2] < .5 && .5 < ratio[3])
+  expect_equal(katz_ratio(0, 10, 5, 10)[1], 0)
+  expect_true(all(is.na(katz_ratio(0, 10, 5, 10)[2:3])))
+})
+
+test_that("audit preprocessing learns training statistics only and codes unknown age as non-child", {
+  inputs <- load_inputs(".")
+  train <- inputs$data[inputs$split$subset == "train", ]
+  prep <- audit_prep(train)
+  shifted <- inputs$data
+  shifted$Age[inputs$split$subset == "test"] <- 1e6
+  before <- prep
+  x <- audit_transform(shifted, prep)
+  expect_identical(prep, before)
+  expect_equal(prep$age_median, median(train$Age, na.rm = TRUE))
+  expect_true(all(x[is.na(shifted$Age), "child"] == 0))
+  expect_true(all(unlist(SPECS) %in% colnames(x)))
+})
+
+test_that("fairness audit suppresses small denominators and satisfies the Chouldechova identity", {
+  inputs <- load_inputs(".")
+  set.seed(3)
+  audit <- fairness_audit(inputs$data, runif(nrow(inputs$data)))
+  for (name in c("tpr", "fpr", "ppv")) {
+    small <- audit[[paste0(name, "_denominator")]] < MIN_DENOMINATOR
+    expect_true(all(is.na(audit[small, c(name, paste0(name, c("_lower", "_upper")))])))
+    expect_false(anyNA(audit[[name]][!small]))
+  }
+  full <- audit[!is.na(audit$tpr) & !is.na(audit$fpr) & !is.na(audit$ppv) &
+                  audit$ppv > 0 & audit$ppv < 1, ]
+  expect_gt(nrow(full), 0)
+  p <- full$base_rate
+  expect_equal(full$fpr, p / (1 - p) * (1 - full$ppv) / full$ppv * full$tpr, tolerance = 1e-12)
+  committed <- read.csv(file.path("outputs", "r", "fairness_audit.csv"))
+  full <- committed[!is.na(committed$tpr) & !is.na(committed$fpr) & !is.na(committed$ppv) &
+                      committed$ppv > 0 & committed$ppv < 1, ]
+  p <- full$base_rate
+  expect_equal(full$fpr, p / (1 - p) * (1 - full$ppv) / full$ppv * full$tpr, tolerance = 1e-12)
+  expect_true(all(is.na(committed$ppv[committed$ppv_denominator < MIN_DENOMINATOR])))
+})
+
+test_that("exported audit reproduces the documented findings", {
+  out <- file.path("outputs", "r")
+  folds <- read.csv(file.path("data", "repeated_cv.csv"), check.names = FALSE)
+  expect_true(all(table(folds[["repeat"]]) == N_RECORDS))
+  comparison <- read.csv(file.path(out, "model_comparison.csv"))
+  expect_true(all(comparison$folds == 100))
+  scores <- read.csv(file.path(out, "cv_scores.csv"), check.names = FALSE)
+  expect_equal(names(scores), c("task", "repeat", "fold", "model", "roc_auc", "brier",
+                                "log_loss", "n"))
+  coefficients <- read.csv(file.path(out, "sim_coefficients.csv"))
+  woman <- coefficients[coefficients$model == "Gender visible" & coefficients$term == "woman", ]
+  truth <- jsonlite::fromJSON(file.path("data", "synthetic_truth.json"))
+  expect_lt(woman$upper, 0)
+  expect_true(woman$lower < truth$injected_log_odds$woman && truth$injected_log_odds$woman < woman$upper)
+  fit <- read.csv(file.path(out, "policy_fit.csv"))
+  expect_gt(fit$loglik[fit$model == "Policy + structure"], max(fit$loglik[fit$model %in% c("Policy only", "Structure only")]))
 })
 cat("\nAll focused R tests passed.\n")

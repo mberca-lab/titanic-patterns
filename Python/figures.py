@@ -34,7 +34,7 @@ def eda_figure(data):
         for i, (_, row) in enumerate(grouped.iterrows()):
             ax.text(i, row["mean"] + .025, f'n={int(row["size"])}', ha="center", fontsize=9)
         ax.set(title=title, xlabel=variable, ylabel="Observed survival proportion", ylim=(0, 1))
-    for ax, variable, bins in [(axes[1, 0], "Age", 20), (axes[1, 1], "Fare", 25)]:
+    for ax, variable, bins in [(axes[1, 0], "Age", 20), (axes[1, 1], "FarePerPerson", 25)]:
         bin_edges = np.histogram_bin_edges(data[variable].dropna(), bins=bins)
         for outcome, color, label in [(0, COLORS[0], "Did not survive"), (1, COLORS[2], "Survived")]:
             ax.hist(data.loc[data.Survived.eq(outcome), variable].dropna(), bins=bin_edges,
@@ -53,10 +53,10 @@ def diagnostics(tables):
         fpr, tpr, _ = roc_curve(group.Survived, group.probability, pos_label=1)
         axes[0].plot(fpr, tpr, color=color, label=model)
         cal = reliability(group.Survived, group.probability)
-        visible = cal.loc[cal["count"].gt(0)]
-        axes[1].plot(visible.mean_probability, visible.observed_rate, "o-", color=color, label=model)
+        visible = cal.loc[cal["n"].gt(0)]
+        axes[1].plot(visible.predicted, visible.observed, "o-", color=color, label=model)
         for row in visible.itertuples():
-            axes[1].annotate(f"n={row.count}", (row.mean_probability, row.observed_rate),
+            axes[1].annotate(f"n={row.n}", (row.predicted, row.observed),
                              xytext=(4, 5), textcoords="offset points", fontsize=8, color=color)
     for ax in axes:
         ax.plot([0, 1], [0, 1], "--", color="#9aa5ad", linewidth=1)
@@ -66,7 +66,8 @@ def diagnostics(tables):
     axes[1].set(title="Reliability | five equal-width bins", xlabel="Mean predicted survival probability",
                 ylabel="Observed survival proportion")
     axes[0].legend(loc="lower right", frameon=False, fontsize=8)
-    fig.suptitle("179 untouched records, not a final verdict", fontsize=17, fontweight="bold")
+    n_test = len(tables["predictions"]) // len(MODELS)
+    fig.suptitle(f"{n_test} untouched records, not a final verdict", fontsize=17, fontweight="bold")
     return fig
 
 

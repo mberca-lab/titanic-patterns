@@ -1,16 +1,16 @@
 {
   "age_median": 28,
-  "fare_median": 14.4542,
+  "fare_median": 8.0500000000000007,
   "embarked_mode": "S",
   "means": {
-    "age_z": 29.283356741573034,
-    "log_fare_z": 2.9447124298731264,
-    "family_size_z": 1.8679775280898876
+    "age_z": 29.223759541984734,
+    "log_fare_z": 2.5087798716444372,
+    "family_size_z": 1.866412213740458
   },
   "scales": {
-    "age_z": 12.856157077151309,
-    "log_fare_z": 0.98016754321545885,
-    "family_size_z": 1.6111382212552032
+    "age_z": 13.013087952467243,
+    "log_fare_z": 0.66136374517688035,
+    "family_size_z": 1.4234016689932951
   },
   "features": ["age_z", "log_fare_z", "family_size_z", "age_missing", "sex_male", "class_2", "class_3", "embarked_Q", "embarked_S"]
 }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="A real-data Titanic case study in R and Python: association rules, random forest, Bayesian logistic regression, and honest uncertainty.">
-<title>Titanic / Patterns, Prediction & Uncertainty</title>
+<meta name="description" content="The rule in the data: what a model learns when it is trained on a historical decision. A respectful, evidence-first Titanic case study for people analytics, in R and Python.">
+<title>The Rule in the Data / What a model learns from a historical decision</title>
 <script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("scoutTheme");
@@ -14,74 +14,76 @@
   })();
 </script>
 <style>
+/*__FONTS__*/
 :root {
   color-scheme: light;
   --cp-bg: #f7f4ef;
   --cp-bg-elevated: #fcfbf8;
   --cp-surface: #ffffff;
-  --cp-surface-soft: #f5f5f5;
-  --cp-border: #dedede;
-  --cp-border-strong: #919191;
-  --cp-text: #242424;
-  --cp-text-muted: #5c5c5c;
-  --cp-text-soft: #6f6f6f;
+  --cp-surface-soft: #f3efe8;
+  --cp-border: #e2ddd4;
+  --cp-border-strong: #8f8a83;
+  --cp-text: #1f1d1b;
+  --cp-text-muted: #59554f;
+  --cp-text-soft: #6f6a63;
   --cp-accent: #b11f4b;
   --cp-accent-hover: #9a1a41;
   --cp-accent-soft: rgba(177, 31, 75, 0.08);
   --cp-accent-fg: #ffffff;
-  --cp-success: #16a34a;
-  --cp-danger: #dc2626;
-  --cp-warning: #f59e0b;
-  --cp-link: #0078d4;
-  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
-  --cp-overlay: rgba(255, 255, 255, 0.8);
-  --cp-panel: rgba(255, 255, 255, 0.86);
-  --cp-panel-strong: rgba(255, 255, 255, 0.96);
-  --cp-sheen: rgba(255, 255, 255, 0.55);
-  --cp-highlight: rgba(177, 31, 75, 0.12);
+  --cp-sea: #1f4e5f;
+  --cp-sea-soft: rgba(31, 78, 95, 0.1);
+  --cp-link: #005fa8;
+  --cp-shadow: 0 18px 48px rgba(31, 29, 27, 0.08);
+  --cp-grain: .06;
+  --display: "Instrument Serif", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --body: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: Consolas, "Cascadia Mono", "Courier New", monospace;
 }
 html[data-theme="dark"] {
   color-scheme: dark;
-  --cp-bg: #3d3b3a;
-  --cp-bg-elevated: #343231;
-  --cp-surface: #292929;
-  --cp-surface-soft: #2e2e2e;
-  --cp-border: #474747;
-  --cp-border-strong: #5f5f5f;
-  --cp-text: #dedede;
-  --cp-text-muted: #919191;
-  --cp-text-soft: #b0b0b0;
+  --cp-bg: #1d1c1b;
+  --cp-bg-elevated: #242322;
+  --cp-surface: #272625;
+  --cp-surface-soft: #2e2c2b;
+  --cp-border: #3f3d3b;
+  --cp-border-strong: #8a8580;
+  --cp-text: #ebe7e1;
+  --cp-text-muted: #b3ada5;
+  --cp-text-soft: #9d978f;
   --cp-accent: #fd8ea1;
   --cp-accent-hover: #fb7b91;
-  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-soft: rgba(253, 142, 161, 0.12);
   --cp-accent-fg: #1a1a1a;
-  --cp-success: #4ade80;
-  --cp-danger: #f87171;
-  --cp-warning: #fbbf24;
-  --cp-link: #4da6ff;
-  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
-  --cp-overlay: rgba(41, 41, 41, 0.88);
-  --cp-panel: rgba(41, 41, 41, 0.72);
-  --cp-panel-strong: rgba(41, 41, 41, 0.96);
-  --cp-sheen: rgba(255, 255, 255, 0.04);
-  --cp-highlight: rgba(253, 142, 161, 0.12);
+  --cp-sea: #8cc4d6;
+  --cp-sea-soft: rgba(140, 196, 214, 0.12);
+  --cp-link: #7cbcff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  --cp-grain: .09;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; }
+body { margin: 0; background: var(--cp-bg); color: var(--cp-text); font-family: var(--body); line-height: 1.6; font-size: 16px; overflow-wrap: break-word; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: var(--cp-grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 a { color: var(--cp-link); text-underline-offset: 4px; }
 button, select, input { font: inherit; accent-color: var(--cp-accent); }
-button, select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--cp-border-strong); border-radius: .625rem; background: var(--cp-surface); color: var(--cp-text); }
+button, select { min-height: 44px; padding: 8px 14px; border: 1px solid var(--cp-border-strong); border-radius: 999px; background: var(--cp-surface); color: var(--cp-text); }
+select { border-radius: .625rem; }
 button { cursor: pointer; } button:hover { border-color: var(--cp-accent); background: var(--cp-accent-soft); }
-:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 4px; }
-.skip { position: absolute; top: -100px; padding: 12px; background: var(--cp-surface); z-index: 10; } .skip:focus { top: 8px; }
-.shell { max-width: 1440px; margin: auto; padding: 24px 48px; }
-.masthead { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-bottom: 1px solid var(--cp-border-strong); padding-bottom: 24px; }
-.mark { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
-.mono, .eyebrow, .chapter-number { font-family: Consolas, "Courier New", Courier, monospace; font-size: 11px; letter-spacing: .11em; text-transform: uppercase; }
-.eyebrow, .chapter-number { color: var(--cp-accent); }
-.nav { display: flex; gap: 24px; align-items: center; font-size: 13px; }
+:focus-visible { outline: 3px solid var(--cp-accent); outline-offset: 3px; }
+.skip { position: absolute; top: -100px; left: 8px; padding: 12px; background: var(--cp-surface); z-index: 10; } .skip:focus { top: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.shell { position: relative; z-index: 1; max-width: 1440px; margin: auto; padding: 24px 48px; }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: 24px; border-bottom: 1px solid var(--cp-border-strong); padding-bottom: 20px; }
+.mark { font-family: var(--display); font-size: 22px; letter-spacing: -.01em; }
+.mark em { color: var(--cp-accent); }
+.mono, .eyebrow, .chapter-number, .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow, .chapter-number, .kicker { color: var(--cp-accent); }
+.nav { display: flex; gap: 20px; align-items: center; font-size: 13px; }
 .nav a { color: var(--cp-text-muted); text-decoration: none; }
+.nav a:hover { color: var(--cp-accent); }
+
+/* Hero */
 .hero { position: relative; display: grid; grid-template-columns: 1.7fr 1fr; gap: 72px; align-items: end; padding: 56px 0 44px; }
 .hero-voyage { position: absolute; top: 44px; right: 0; width: min(34%, 340px); height: auto; opacity: .72; pointer-events: none; }
 .voyage-liner { transform: translate(240px, 14px); }
@@ -93,6 +95,10 @@ button { cursor: pointer; } button:hover { border-color: var(--cp-accent); backg
 @media(prefers-reduced-motion:no-preference) {
   .voyage-liner { animation: quiet-voyage 3.6s .35s cubic-bezier(.22,.61,.36,1) both; }
   .voyage-wake { stroke-dasharray: 1; animation: quiet-wake 3.3s .5s cubic-bezier(.22,.61,.36,1) both; }
+  .hero h1, .hero .lead, .hero .eyebrow, .hero > .aside { animation: rise .9s cubic-bezier(.22,.61,.36,1) both; }
+  .hero .eyebrow { animation-delay: .05s; } .hero h1 { animation-delay: .15s; } .hero .lead { animation-delay: .35s; } .hero > .aside { animation-delay: .6s; }
+  html.js-reveal .reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .8s cubic-bezier(.22,.61,.36,1); }
+  html.js-reveal .reveal.in { opacity: 1; transform: none; }
 }
 @keyframes quiet-voyage {
   from { opacity: 0; transform: translate(22px, 14px); }
@@ -100,69 +106,236 @@ button { cursor: pointer; } button:hover { border-color: var(--cp-accent); backg
   to { opacity: 1; transform: translate(240px, 14px); }
 }
 @keyframes quiet-wake { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-h1 { font-size: clamp(44px, 5.3vw, 78px); line-height: 1.02; letter-spacing: -.065em; font-weight: 650; margin: 20px 0 24px; }
-h1 span { color: var(--cp-accent); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(56px, 8.2vw, 132px); line-height: .9; letter-spacing: -.02em; margin: 18px 0 22px; }
+h1 em { color: var(--cp-accent); }
+.subtitle { display: block; font-family: var(--display); font-style: italic; font-size: clamp(22px, 2.3vw, 32px); line-height: 1.15; letter-spacing: 0; margin-top: 18px; color: var(--cp-text-muted); }
 .lead { font-size: 19px; max-width: 680px; margin-bottom: 0; }
+.lead em { font-family: var(--display); font-size: 1.2em; }
 .aside { border-left: 2px solid var(--cp-accent); padding: 4px 0 4px 24px; font-size: 14px; }
 .hero > .aside { margin-top: 100px; }
-.badge { border: 1px solid var(--cp-accent); color: var(--cp-accent); padding: 4px 8px; border-radius: .625rem; font-size: 10px; font-weight: 700; letter-spacing: .08em; }
-.muted, .note { color: var(--cp-text-muted); } .note { font-size: 12px; }
-.strip { display: grid; grid-template-columns: repeat(3,1fr) 1.2fr; border-block: 1px solid var(--cp-border); margin-bottom: 48px; }
-.strip > div { border-right: 1px solid var(--cp-border); padding: 20px 24px; } .strip > div:first-child { padding-left: 0; } .strip > div:last-child { border-right: 0; }
-.strip strong { display: block; font-size: 29px; letter-spacing: -.04em; font-weight: 600; }
-.strip span { font-size: 12px; color: var(--cp-text-muted); } .strip label { font-size: 12px; display: block; margin-bottom: 4px; }
-.strip select { width: 100%; }
-.context-intro { max-width: 960px; padding-bottom: 36px; }
-.context-intro h2 { font-size: 19px; line-height: 1.3; letter-spacing: -.025em; margin: 0 0 12px; }
-.context-intro p { margin: 0; }
-.chapter { padding: 12px 0 40px; scroll-margin-top: 20px; }
-.chapter-head { display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: end; margin-bottom: 24px; }
-h2 { font-size: clamp(29px, 3.1vw, 43px); line-height: 1.12; letter-spacing: -.045em; margin: 12px 0 8px; font-weight: 650; }
-h3 { font-size: 19px; line-height: 1.25; letter-spacing: -.025em; margin: 0 0 12px; }
-.chapter-head p { max-width: 660px; font-size: 14px; margin: 0; }
-.panel { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; min-width: 0; padding: 24px; }
-.plot { height: 390px; }
-.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.rates-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 24px; }
-.reading { padding: 24px 0 24px 24px; border-left: 1px solid var(--cp-border-strong); }
-.reading strong { color: var(--cp-accent); }
-.callout { background: var(--cp-accent-soft); border-left: 3px solid var(--cp-accent); padding: 16px 20px; margin-top: 24px; font-size: 14px; }
-.controls { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin: 20px 0; }
-.controls label { display: block; font-size: 12px; font-weight: 600; } .controls output { float: right; color: var(--cp-accent); }
-input[type=range] { width: 100%; min-height: 32px; }
-#rule-select { width: 100%; margin: 12px 0 20px; }
-.rule-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin: 20px 0; }
-.rule-metrics strong { display: block; font-size: 25px; letter-spacing: -.04em; color: var(--cp-accent); }
-.rule-metrics span { color: var(--cp-text-muted); font-size: 12px; }
-.empty { border: 1px dashed var(--cp-border-strong); border-radius: .625rem; padding: 24px; margin: 12px 0; }
-[hidden] { display: none !important; }
-.table-scroll { overflow: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 13px; text-align: left; }
-th, td { padding: 16px 12px; border-bottom: 1px solid var(--cp-border); white-space: nowrap; }
-th { color: var(--cp-text-muted); font-weight: 600; font-size: 11px; }
+.memorial { font-family: var(--display); font-size: 25px; line-height: 1.2; margin: 14px 0 12px; }
+.badge { display: inline-block; border: 1px solid var(--cp-accent); color: var(--cp-accent); padding: 4px 9px; border-radius: 999px; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; }
+.badge.sea { border-color: var(--cp-sea); color: var(--cp-sea); }
+.muted, .note { color: var(--cp-text-muted); } .note { font-size: 12.5px; }
+.credit { font-size: 12px; color: var(--cp-text-muted); }
+
+.strip { display: grid; grid-template-columns: repeat(4,1fr); border-block: 1px solid var(--cp-border-strong); margin-bottom: 56px; }
+.strip > div { border-right: 1px solid var(--cp-border); padding: 22px 24px; } .strip > div:first-child { padding-left: 0; } .strip > div:last-child { border-right: 0; }
+.strip strong { display: block; font-family: var(--display); font-weight: 400; font-size: 48px; line-height: 1; letter-spacing: -.01em; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.strip strong.accent { color: var(--cp-accent); }
+.strip span { font-size: 12.5px; color: var(--cp-text-muted); display: block; }
+
+.context-intro { display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; padding-bottom: 56px; }
+.context-intro h2 { font-size: clamp(28px, 2.6vw, 38px); margin: 0; }
+.context-intro p { margin: 0 0 12px; max-width: 720px; }
+
+/* Chapters */
+.chapter { padding: 40px 0 56px; scroll-margin-top: 20px; border-top: 1px solid var(--cp-border-strong); }
+.chapter-head { display: grid; grid-template-columns: .8fr 1.2fr; gap: 48px; align-items: end; margin-bottom: 32px; }
+h2 { font-family: var(--display); font-weight: 400; font-size: clamp(38px, 4.4vw, 64px); line-height: 1; letter-spacing: -.01em; margin: 12px 0 0; }
+h2 em { color: var(--cp-accent); }
+h3 { font-size: 17px; line-height: 1.3; letter-spacing: -.01em; margin: 0 0 6px; font-weight: 650; }
+.chapter-head p { max-width: 680px; font-size: 15.5px; margin: 0; }
+.panel { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 18px; min-width: 0; padding: 28px; box-shadow: var(--cp-shadow); }
+.panel + .panel, .grid-2 + .panel, .panel + .grid-2, .grid-2 + .grid-2 { margin-top: 24px; }
+.grid-2 > .panel + .panel, .reproduce > .panel + .panel { margin-top: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 18px; }
+.panel-head p { margin: 0; font-size: 13.5px; color: var(--cp-text-muted); max-width: 620px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid-wide { display: grid; grid-template-columns: 1.55fr 1fr; gap: 24px; }
+.reading { padding: 4px 0 4px 24px; border-left: 1px solid var(--cp-border-strong); font-size: 14.5px; }
+.reading strong, .reading b { color: var(--cp-accent); font-weight: 650; }
+.pull { font-family: var(--display); font-size: clamp(26px, 2.4vw, 34px); line-height: 1.12; margin: 0 0 14px; }
+.pull em { color: var(--cp-accent); }
+.callout { background: var(--cp-accent-soft); border-left: 3px solid var(--cp-accent); padding: 16px 20px; margin-top: 24px; font-size: 14px; border-radius: 0 10px 10px 0; }
+.callout.sea { background: var(--cp-sea-soft); border-left-color: var(--cp-sea); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--cp-text-muted); margin: 0 0 8px; padding: 0; list-style: none; }
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.key { display: inline-block; width: 11px; height: 11px; border-radius: 50%; background: var(--c); flex: none; }
+.key.hollow { background: transparent; border: 2px solid var(--c); }
+.key.diamond { border-radius: 1px; transform: rotate(45deg); background: transparent; border: 2px solid var(--cp-text); width: 9px; height: 9px; }
+.key.line { width: 18px; height: 0; border-top: 1px dashed var(--cp-border-strong); border-radius: 0; background: none; }
+
+/* Range charts (HTML, responsive, readable by assistive tech) */
+.rc { --lab: 190px; --end: 104px; margin-top: 6px; }
+.rc-row { display: grid; grid-template-columns: var(--lab) minmax(0,1fr) var(--end); column-gap: 18px; align-items: center; border-bottom: 1px solid var(--cp-border); min-height: 58px; }
+.rc-row.ref-row .rc-label { color: var(--cp-text-muted); }
+.rc-label { font-size: 13.5px; font-weight: 600; line-height: 1.25; padding: 8px 0; }
+.rc-label small { display: block; font-weight: 400; color: var(--cp-text-muted); font-size: 11.5px; }
+.rc-end { font-size: 12.5px; text-align: right; color: var(--cp-text-muted); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.rc-end b { color: var(--cp-text); font-weight: 650; font-size: 14px; }
+.rc-track { position: relative; height: 54px; }
+.rc-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--cp-border); }
+.rc-ci { position: absolute; top: 50%; height: 9px; transform: translateY(-50%); border-inline: 1.5px solid var(--c); background: linear-gradient(var(--c), var(--c)) center / 100% 1.5px no-repeat; opacity: .75; }
+.rc-dot { position: absolute; top: 50%; width: 13px; height: 13px; border-radius: 50%; transform: translate(-50%,-50%); background: var(--c); box-shadow: 0 0 0 2px var(--cp-surface); z-index: 2; }
+.rc-dot.hollow { background: var(--cp-surface); border: 2px solid var(--c); }
+.rc-dot.diamond { width: 12px; height: 12px; border-radius: 1px; transform: translate(-50%,-50%) rotate(45deg); background: transparent; border: 2px solid var(--cp-text); box-shadow: none; z-index: 3; }
+.rc-link { position: absolute; top: 50%; height: 3px; transform: translateY(-50%); background: var(--cp-border-strong); opacity: .45; border-radius: 2px; }
+.rc-bar { position: absolute; top: 50%; height: 18px; transform: translateY(-50%); background: var(--c); border-radius: 2px; opacity: .9; }
+.rc-val { position: absolute; top: 0; font-size: 11.5px; font-weight: 650; line-height: 1; transform: translateX(-50%); white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--c, var(--cp-text)); }
+.rc-val.below { top: auto; bottom: 0; }
+.rc-val.al { transform: translateX(-6px); } .rc-val.ar { transform: translateX(calc(-100% + 6px)); }
+.rc-ref { position: absolute; top: 4px; bottom: 4px; border-left: 1.5px dashed var(--cp-border-strong); }
+.rc-ref.strong { border-left-color: var(--cp-accent); }
+.rc-suppressed { position: absolute; left: 0; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--cp-text-muted); background: var(--cp-surface); padding-right: 8px; }
+.rc-axis { display: grid; grid-template-columns: var(--lab) minmax(0,1fr) var(--end); column-gap: 18px; }
+.rc-ticks { position: relative; height: 34px; }
+.rc-ticks span { position: absolute; top: 6px; transform: translateX(-50%); font-size: 11px; color: var(--cp-text-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rc-ticks span:first-child { transform: none; } .rc-ticks span:last-child { transform: translateX(-100%); }
+.rc-caption { grid-column: 2; font-size: 11.5px; color: var(--cp-text-muted); text-align: center; }
+
+/* Segmented controls */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--cp-border); border-radius: 999px; background: var(--cp-surface-soft); }
+.seg button, .seg label { min-height: 38px; border: 0; background: transparent; border-radius: 999px; padding: 6px 14px; font-size: 13px; display: inline-flex; align-items: center; cursor: pointer; }
+.seg button[aria-pressed="true"], .seg button[aria-selected="true"], .seg label:has(input:checked) { background: var(--cp-text); color: var(--cp-bg); }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg label:has(input:focus-visible) { outline: 3px solid var(--cp-accent); outline-offset: 2px; }
+fieldset.seg { margin: 0; } fieldset.seg legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Seats */
+.seats-wrap { display: grid; grid-template-columns: 1fr 1.6fr; gap: 36px; align-items: center; }
+.seat-figure { margin: 0; }
+.seat-figure svg { width: 100%; height: auto; display: block; }
+.seat { fill: var(--cp-text); }
+.seat.empty { fill: none; stroke: var(--cp-border-strong); stroke-width: .7; }
+@media(prefers-reduced-motion:no-preference) {
+  .seats-anim .seat { opacity: 0; transition: opacity .5s ease; transition-delay: calc(var(--d) * 1ms); }
+  .seats-anim.in .seat { opacity: 1; }
+}
+.big-num { font-family: var(--display); font-size: clamp(56px, 6vw, 92px); line-height: .9; display: block; font-variant-numeric: tabular-nums; }
+.big-num.accent { color: var(--cp-accent); }
+.big-pair { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-end; margin: 10px 0 18px; }
+.big-pair span.cap { display: block; font-size: 12.5px; color: var(--cp-text-muted); margin-top: 6px; max-width: 220px; }
+
+/* Deck */
+.deck { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.deck svg { width: 100%; height: auto; display: block; }
+.deck .hull { fill: var(--cp-surface-soft); stroke: var(--cp-text); stroke-width: 1.6; }
+.deck .house { fill: var(--cp-surface); stroke: var(--cp-border-strong); stroke-width: 1; }
+.deck .funnel { fill: var(--cp-text); }
+.deck .boat { fill: var(--cp-surface); stroke: var(--cp-text); stroke-width: 1.2; }
+.deck .boat-fill { fill: var(--cp-accent); }
+.deck .boat-num { font-family: var(--mono); font-size: 11px; fill: var(--cp-text-muted); text-anchor: middle; }
+.deck .side-label { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; fill: var(--cp-text-muted); }
+.deck .bow { font-family: var(--mono); font-size: 12px; fill: var(--cp-text-muted); letter-spacing: .14em; }
+.deck .water { fill: none; stroke: var(--cp-sea); stroke-width: 1; opacity: .35; }
+.side-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 8px; }
+.side-stat { border-top: 2px solid var(--cp-text); padding-top: 12px; }
+.side-stat .big-num { font-size: clamp(48px, 5vw, 76px); }
+.side-stat p { margin: 6px 0 0; font-size: 13.5px; }
+
+/* Missing */
+.missing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 8px; }
+.missing .col { border-top: 1px solid var(--cp-border-strong); padding-top: 10px; }
+.missing .meter { height: 120px; display: flex; align-items: flex-end; margin: 10px 0; background: repeating-linear-gradient(0deg, var(--cp-border) 0 1px, transparent 1px 24px); }
+.missing .meter i { display: block; width: 100%; background: var(--cp-text); }
+.missing .col.hi .meter i { background: var(--cp-accent); }
+.missing b { font-family: var(--display); font-weight: 400; font-size: 36px; line-height: 1; display: block; }
+
+/* Proxy */
+.recovery { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: center; text-align: center; margin: 12px 0 8px; }
+.recovery .arrow { font-family: var(--display); font-size: 48px; color: var(--cp-text-muted); }
+.recovery small { display: block; font-size: 12.5px; color: var(--cp-text-muted); margin-top: 8px; }
+.titles { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+.titles li { font-family: var(--display); font-size: 22px; border: 1px solid var(--cp-border-strong); border-radius: 999px; padding: 2px 14px; }
+
+/* Audit */
+.tabs { margin-bottom: 18px; }
+.audit-head { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 22px; }
+.audit-head > div { border-top: 2px solid var(--cp-text); padding-top: 10px; font-size: 13px; }
+.audit-head b { display: block; font-family: var(--display); font-weight: 400; font-size: 40px; line-height: 1; margin-bottom: 4px; }
+.audit-head b.accent { color: var(--cp-accent); }
+.multiples { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 26px 36px; }
+.multiple h3 { font-size: 14.5px; margin-bottom: 0; }
+.multiple figcaption p { margin: 2px 0 6px; font-size: 12.5px; color: var(--cp-text-muted); }
+.multiple .rc { --lab: 112px; --end: 78px; }
+.multiple .rc-row { min-height: 46px; } .multiple .rc-track { height: 44px; }
+
+/* Promotion */
+.synthetic-band { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; border: 1px dashed var(--cp-sea); color: var(--cp-sea); border-radius: 12px; padding: 10px 16px; font-size: 13.5px; margin-bottom: 24px; background: var(--cp-sea-soft); }
+.memo { background: var(--cp-bg-elevated); border: 1px solid var(--cp-border-strong); border-radius: 4px; padding: 36px 40px; box-shadow: var(--cp-shadow); position: relative; }
+.memo::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--cp-border); pointer-events: none; }
+.memo-meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-family: var(--mono); font-size: 12px; border-bottom: 1px solid var(--cp-border-strong); padding-bottom: 16px; margin-bottom: 18px; }
+.memo-meta dt { color: var(--cp-text-muted); text-transform: uppercase; letter-spacing: .1em; } .memo-meta dd { margin: 0; }
+.memo h3 { font-family: var(--display); font-weight: 400; font-size: 32px; margin-bottom: 14px; }
+.checklist { counter-reset: c; list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 40px; }
+.checklist li { counter-increment: c; position: relative; padding-left: 46px; font-size: 14.5px; }
+.checklist li::before { content: counter(c, decimal-leading-zero); position: absolute; left: 0; top: -2px; font-family: var(--display); font-size: 26px; color: var(--cp-accent); line-height: 1; }
+.checklist b { display: block; }
+
+/* Appendix */
+.appendix-bar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.model-focus { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 18px 0 8px; }
+.model-focus label, .rule-picker label { font-size: 13px; font-weight: 600; }
+#scores tr.is-focused, #rules-body tr.is-focused { background: var(--cp-accent-soft); }
+#scores tr.is-focused th { color: var(--cp-accent); }
+.model-series.is-context { opacity: .35; }
+.model-series.is-focused .curve { stroke-width: 1.2; }
+.model-series.is-focused circle { stroke: var(--cp-surface); stroke-width: .4; }
+.model-legend .is-focused { color: var(--cp-text); font-weight: 650; }
+.rule-evidence { border-block: 1px solid var(--cp-border); padding: 20px 0; margin: 18px 0; }
+.rule-picker { display: grid; gap: 8px; margin: 12px 0; }
+.rule-picker select { width: 100%; min-width: 0; max-width: 100%; }
+#rule-evidence-chart { --lab: 150px; --end: 120px; }
+#rule-evidence-reading { margin-bottom: 0; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; text-align: left; font-variant-numeric: tabular-nums; }
+th, td { padding: 12px 10px; border-bottom: 1px solid var(--cp-border); white-space: nowrap; }
+th { color: var(--cp-text-muted); font-weight: 600; font-size: 11px; font-family: var(--mono); letter-spacing: .06em; }
 td:first-child { font-weight: 600; }
-.model-note { padding: 16px 0 24px; font-size: 12px; color: var(--cp-text-muted); }
-.comparison-head { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; }
-.reading-list { padding-left: 20px; font-size: 14px; } .reading-list li { margin-bottom: 12px; }
-.reproduce { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 24px; }
-.reproduce a { font-weight: 600; }
-details { border-block: 1px solid var(--cp-border); padding: 20px 0; margin: 28px 0; font-size: 14px; }
-summary { cursor: pointer; font-weight: 600; }
-.method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 48px; margin-top: 16px; }
-footer { display: flex; justify-content: space-between; gap: 24px; border-top: 1px solid var(--cp-border-strong); padding: 28px 0; font-size: 12px; color: var(--cp-text-muted); }
+td.wrap { white-space: normal; min-width: 220px; font-weight: 500; }
+.plot-svg { width: 100%; max-width: 460px; height: auto; display: block; margin: auto; }
+.plot-svg text { font-family: var(--body); font-size: 3.4px; fill: var(--cp-text-muted); }
+.plot-svg .grid { stroke: var(--cp-border); stroke-width: .25; }
+.plot-svg .diag { stroke: var(--cp-border-strong); stroke-width: .35; stroke-dasharray: 1.2 1.2; fill: none; }
+.plot-svg .curve { fill: none; stroke-width: .8; stroke-linejoin: round; }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 8px 0 14px; }
+.controls label { display: block; font-size: 12.5px; font-weight: 600; } .controls output { float: right; color: var(--cp-accent); }
+input[type=range] { width: 100%; min-height: 32px; }
+.empty { border: 1px dashed var(--cp-border-strong); border-radius: .625rem; padding: 18px; margin: 12px 0; }
+[hidden] { display: none !important; }
+
+/* Reproduce */
+.reproduce { display: grid; grid-template-columns: 1.3fr 1fr; gap: 24px; }
+pre { background: var(--cp-text); color: var(--cp-bg); border-radius: 12px; padding: 20px 22px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; margin: 10px 0 0; }
+pre .c { opacity: .6; }
+.limits { list-style: none; padding: 0; margin: 0; font-size: 14px; }
+.limits li { padding: 10px 0; border-bottom: 1px solid var(--cp-border); }
+.limits b { font-weight: 650; }
+.links { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 18px; font-weight: 600; font-size: 14px; }
+footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border-top: 1px solid var(--cp-border-strong); padding: 28px 0 40px; font-size: 12.5px; color: var(--cp-text-muted); }
+
 @media(max-width:1050px) {
   .shell { padding: 24px; } .nav a { display: none; } .hero { gap: 32px; }
-  .rates-layout { grid-template-columns: 1fr; } .reading { border-left: 0; border-top: 1px solid var(--cp-border); padding: 20px 0 0; }
-  .chapter-head { gap: 24px; } .two-up { grid-template-columns: 1fr; }
+  .grid-wide, .grid-2, .seats-wrap, .reproduce { grid-template-columns: 1fr; }
+  .reading { border-left: 0; border-top: 1px solid var(--cp-border-strong); padding: 18px 0 0; }
+  .chapter-head, .context-intro { gap: 24px; }
+  .checklist { grid-template-columns: 1fr; }
+  footer { grid-template-columns: 1fr; }
 }
 @media(max-width:640px) {
   .shell { padding: 16px; } .hero { grid-template-columns: 1fr; padding-top: 100px; gap: 28px; }
   .hero-voyage { top: 8px; width: min(210px, 100%); }
   .hero > .aside { margin-top: 0; }
-  .strip { grid-template-columns: 1fr 1fr; } .strip > div { padding: 16px 12px; } .strip > div:nth-child(3) { padding-left: 0; }
-  .chapter-head { grid-template-columns: 1fr; gap: 16px; } .controls { gap: 12px; }
-  .panel { padding: 20px 12px; } .plot { height: 380px; } .rule-metrics { grid-template-columns: 1fr 1fr; }
-  .reproduce, .method-grid { grid-template-columns: 1fr; } footer { flex-direction: column; gap: 12px; }
+  .mark { font-size: 19px; }
+  .strip { grid-template-columns: 1fr 1fr; } .strip > div { padding: 16px 12px; } .strip > div:nth-child(odd) { padding-left: 0; } .strip > div:nth-child(2) { border-right: 0; }
+  .strip > div:nth-child(-n+2) { border-bottom: 1px solid var(--cp-border); }
+  .strip strong { font-size: 38px; }
+  .chapter-head, .context-intro { grid-template-columns: 1fr; gap: 14px; }
+  .panel { padding: 20px 14px; border-radius: 14px; }
+  .rc-row { grid-template-columns: minmax(0,1fr) auto; row-gap: 0; padding-top: 6px; }
+  .rc-label { grid-column: 1; padding: 0; } .rc-end { grid-column: 2; grid-row: 1; }
+  .rc-track { grid-column: 1 / -1; }
+  .rc-axis { grid-template-columns: minmax(0,1fr); } .rc-axis > :first-child, .rc-axis > :nth-child(3) { display: none; }
+  .rc-caption { grid-column: 1; }
+  .multiple .rc-row { grid-template-columns: minmax(0,1fr) auto; }
+  .side-stats, .audit-head, .missing { grid-template-columns: 1fr; }
+  .missing { grid-template-columns: repeat(3, 1fr); gap: 10px; } .missing b { font-size: 28px; }
+  .audit-head b { font-size: 34px; }
+  .recovery { grid-template-columns: 1fr; } .recovery .arrow { transform: rotate(90deg); }
+  .controls { grid-template-columns: 1fr; }
+  .memo { padding: 26px 18px; } .memo-meta { grid-template-columns: 1fr; }
 }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior: auto; } }
 </style>
@@ -171,11 +344,11 @@ footer { display: flex; justify-content: space-between; gap: 24px; border-top: 1
 <a class="skip" href="#story">Skip to story</a>
 <div class="shell">
 <header class="masthead">
-  <div class="mark">Titanic / Beyond accuracy</div>
-  <nav class="nav" aria-label="Story navigation"><a href="#patterns">Patterns</a><a href="#predictions">Prediction</a><a href="#uncertainty">Uncertainty</a><a href="#reproduce">Reproduce</a><button id="theme" aria-label="Toggle light or dark theme">Change theme</button></nav>
+  <div class="mark">Titanic / <em>The rule in the data</em></div>
+  <nav class="nav" aria-label="Story navigation"><a href="#rule">The rule</a><a href="#model">The model</a><a href="#proxy">The proxy</a><a href="#audit">The audit</a><a href="#promotion">Promotion data</a><a href="#reproduce">Reproduce</a><button id="theme" type="button" aria-label="Toggle light or dark theme">Change theme</button></nav>
 </header>
 <main id="story">
-<section class="hero">
+<section class="hero" aria-labelledby="hero-title">
   <svg class="hero-voyage" viewBox="0 0 360 96" width="360" height="96" aria-hidden="true" focusable="false">
     <path class="voyage-wake" pathLength="1" d="M20 64C40 60 54 68 77 64S116 61 136 64S177 67 200 64S225 61 239 64"/>
     <path class="voyage-wake secondary" pathLength="1" d="M57 73C78 70 94 76 117 73S153 70 174 73S207 76 231 73"/>
@@ -188,200 +361,663 @@ footer { display: flex; justify-content: space-between; gap: 24px; border-top: 1
       <g class="liner-ports"><circle cx="22" cy="42" r="1.1"/><circle cx="31" cy="42" r="1.1"/><circle cx="40" cy="42" r="1.1"/><circle cx="49" cy="42" r="1.1"/><circle cx="58" cy="42" r="1.1"/><circle cx="67" cy="42" r="1.1"/></g>
     </g>
   </svg>
-  <div><div class="eyebrow">Field study 03 / Real public data / R + Python</div><h1>The same data.<br><span>Three different questions.</span></h1><p class="lead">What appears together? What predicts an outcome? And how certain are we? A historical Titanic case study, told through three analytical lenses.</p></div>
-  <aside class="aside"><span class="badge">PUBLIC HISTORICAL RECORDS</span><p>Patterns are not explanations. This is a study of 891 labeled passenger records—not the full ship manifest, a causal analysis, or a tool for deciding who should be rescued.</p><p class="note">One shared split. Training-only preprocessing. A held-out comparison. Explicit uncertainty.</p></aside>
+  <div>
+    <div class="eyebrow">Field study 03 / Public historical records / R + Python</div>
+    <h1 id="hero-title">The rule<br>in the <em>data.</em><span class="subtitle">What a model learns when it is trained on a historical decision.</span></h1>
+    <p class="lead">In 1912 a human rule, <em>women and children first</em>, shaped who reached a lifeboat. It was applied unevenly, by class and by side of the ship. Train a model on that record and it learns the rule, not anyone’s worth. The same thing happens when a model learns from past promotions, hires or ratings.</p>
+  </div>
+  <aside class="aside" aria-label="In memory and about this study">
+    <span class="badge">NOT A SURVIVAL GAME</span>
+    <p class="memorial">In memory of the about 1,500 people who died when Titanic sank on 15 April 1912.</p>
+    <p>This study reads the records of <span data-k="rows"></span> passengers; crew are not in the source. It names no one and scores no one.</p>
+    <p class="credit" data-k="credit"></p>
+  </aside>
 </section>
-<section class="strip" aria-label="Dataset and implementation">
-  <div><strong>891</strong><span>labeled historical records</span></div><div><strong>712</strong><span>training rows / grouped CV</span></div><div><strong>179</strong><span>held-out test rows</span></div>
-  <div><label for="language">Explore the implementation</label><select id="language"><option value="R">R / randomForest + arules</option><option value="Python">Python / scikit-learn + mlxtend</option></select></div>
+<section class="strip" aria-label="Headline evidence">
+  <div><strong class="accent" data-k="wc-all"></strong><span>of women and children in the record survived</span></div>
+  <div><strong data-k="men-all"></strong><span>of men survived</span></div>
+  <div><strong data-k="auc-ref"></strong><span>cross-validated AUC: a model of the rule plus the ship</span></div>
+  <div><strong class="accent" data-k="ir-male"></strong><span>impact ratio for men when that model “selects” at 0.5, against an 0.8 rule of thumb</span></div>
 </section>
 <section class="context-intro" id="people-analytics-bridge" aria-labelledby="people-analytics-title">
-  <h2 id="people-analytics-title">What transfers beyond this dataset</h2>
-  <p>This study uses historical data to examine choices that matter across applied research: defining measures, choosing meaningful comparisons, separating prediction from explanation, and making uncertainty visible. Those analytical habits transfer to other settings; the findings remain specific to this incomplete historical sample.</p>
-</section>
-<section class="chapter" id="patterns">
-  <div class="chapter-head"><div><div class="chapter-number">01 / Describe before predicting</div><h2>A rate needs<br>a denominator.</h2></div><p>Group averages can conceal both differences and uncertainty. These are sex-by-class summaries of the <strong>observed 891-row sample</strong>, separate from model evaluation. Every dot has a count and a Bayesian interval.</p></div>
-  <div class="rates-layout panel">
-    <div><div id="rates" class="plot" role="img" aria-label="Sex-by-class survival rates with Beta posterior credible intervals"></div><p class="note">Dots: posterior means. Lines: central 95% credible intervals under a Beta(1,1) prior. Hover for observed counts.</p></div>
-    <aside class="reading"><h3>What the sample shows</h3><p id="rate-reading"></p><p>Intervals summarize uncertainty within the model. They do not correct incomplete records, historical selection, or the absence of the rest of the manifest.</p><p class="note">The source’s recorded sex labels are female/male. These summaries describe recorded categories; they do not explain individual outcomes.</p></aside>
+  <div><div class="kicker">Why this matters for people analytics</div><h2 id="people-analytics-title">The label is a record of a decision.</h2></div>
+  <div>
+    <p>In HR data the outcome is rarely a fact about a person. “Promoted”, “hired” and “high performer” record past decisions, made under a policy, by people, and not always evenly. A model trained on those labels learns the policy that produced them.</p>
+    <p>The Titanic is a stark, well-documented case of a decision rule written into an outcome. This page uses it to show how to recognise, measure and audit that inheritance, then repeats the audit on synthetic promotion data where the truth is known. The findings remain specific to this incomplete historical sample. It is not a model of employee behaviour or guidance for workplace decisions.</p>
   </div>
 </section>
-<section class="chapter" id="rules">
-  <div class="chapter-head"><div><div class="chapter-number">02 / Association rules</div><h2>Co-occurrence,<br>not causation.</h2></div><p>Apriori asks which passenger attributes appear with a survival outcome. Rules are discovered on <strong>training rows only</strong>. Inspect confidence against the outcome baseline—not in isolation.</p></div>
+
+<section class="chapter" id="rule" aria-labelledby="rule-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">01 / The rule and the ship</div><h2 id="rule-title">Women and children first, <em>unevenly.</em></h2></div><p>“Women and children first” was an order, not a law of nature. The record shows it was followed: and that how far it reached depended on class, on the side of the ship, and on who was counted as a child. Intervals are 95% Wilson intervals around observed proportions.</p></div>
+  <div class="panel grid-wide reveal">
+    <div>
+      <div class="panel-head"><div><h3>Survival by the rule’s two groups, within each class</h3><p>Children are passengers recorded under 16. Every passenger in the record appears once in the “All” row.</p></div></div>
+      <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Women and children</li><li><span class="key" style="--c:var(--cp-text)"></span>Men</li><li><span class="key line"></span>95% interval</li></ul>
+      <div id="policy-chart" class="rc" role="figure" aria-label="Survival of women and children versus men, overall and by class, with 95 percent intervals"></div>
+    </div>
+    <aside class="reading">
+      <p class="pull">In first class the rule reached <em data-k="wc-1"></em> of women and children. In third, <em data-k="wc-3"></em>.</p>
+      <p>Men in first class survived at <b data-k="men-1"></b>, more than twice the rate of men in second (<span data-k="men-2"></span>) or third class (<span data-k="men-3"></span>). The rule was real, and it was not the only thing that mattered.</p>
+      <p class="note">These are associations in a curated historical record. They describe where a rule landed, not why any one person lived or died.</p>
+    </aside>
+  </div>
+  <div class="panel reveal">
+    <div class="panel-head">
+      <div><h3>Who counted as a child?</h3><p>Survival of children only, by class, under four definitions. The class gap holds under every cutoff; the counts are small, so the intervals are wide.</p></div>
+      <fieldset class="seg" id="cutoff"><legend>Child age cutoff</legend>
+        <label><input type="radio" name="cutoff" value="12">Under 12</label><label><input type="radio" name="cutoff" value="14">Under 14</label><label><input type="radio" name="cutoff" value="16" checked>Under 16</label><label><input type="radio" name="cutoff" value="18">Under 18</label>
+      </fieldset>
+    </div>
+    <div id="child-chart" class="rc" role="figure" aria-label="Child survival by class for the selected age cutoff"></div>
+    <p id="child-status" class="note" role="status"></p>
+  </div>
+  <div class="panel seats-wrap reveal">
+    <div>
+      <div class="kicker">The boats</div>
+      <div class="big-pair">
+        <div><span class="big-num">1,178</span><span class="cap">lifeboat seats on board</span></div>
+        <div><span class="big-num accent">~711</span><span class="cap">people saved, passengers and crew</span></div>
+      </div>
+      <p>There were not enough seats for everyone, and not every seat was used. Scarcity is when a decision rule matters most, and when it is applied fastest and least evenly.</p>
+      <p class="note">Source: British Wreck Commissioner’s Inquiry (1912), cited as historical context. These two figures are not computed from the passenger record, which excludes crew.</p>
+    </div>
+    <figure class="seat-figure">
+      <svg id="seats" viewBox="0 0 620 190" role="img" aria-labelledby="seats-title"><title id="seats-title">1,178 lifeboat seats, one mark each: about 711 filled, about 467 unused</title></svg>
+      <ul class="legend" style="margin-top:10px"><li><span class="key" style="--c:var(--cp-text)"></span>One seat filled (one of ~711 saved)</li><li><span class="key hollow" style="--c:var(--cp-border-strong)"></span>One seat left unused</li></ul>
+    </figure>
+  </div>
+  <div class="panel reveal">
+    <div class="panel-head"><div><h3>Port and starboard read the same order differently</h3><p>Of passengers recorded boarding a boat, the share who were adult men. Shading shows the side-level share; the record is not split by individual boat here.</p></div><span class="badge sea">SCHEMATIC, NOT TO SCALE</span></div>
+    <div class="deck"><svg id="deck" viewBox="0 0 1000 320" role="img" aria-labelledby="deck-title"><title id="deck-title">Top-down schematic of the boat deck: port-side boats shaded to the port share of adult men, starboard-side boats to the starboard share</title></svg></div>
+    <div class="side-stats">
+      <div class="side-stat"><div class="kicker">Port side · even boats</div><span class="big-num" data-k="port-share"></span><p><span data-k="port-men"></span> adult men of <span data-k="port-n"></span> recorded occupants (95% interval <span data-k="port-ci"></span>). Second Officer Lightoller’s side, often read as <em>women and children only</em>.</p></div>
+      <div class="side-stat"><div class="kicker">Starboard side · odd boats</div><span class="big-num accent" data-k="stb-share"></span><p><span data-k="stb-men"></span> adult men of <span data-k="stb-n"></span> recorded occupants (95% interval <span data-k="stb-ci"></span>). First Officer Murdoch’s side, often read as <em>women and children first</em>.</p></div>
+    </div>
+    <p class="note"><span data-k="unknown-n"></span> occupants with an unrecorded side are not shown. One order, two readings: the same policy text produced different outcomes depending on who applied it. HR policies work the same way across managers and sites.</p>
+  </div>
+  <div class="panel grid-wide reveal">
+    <div>
+      <h3>Who is missing from the record?</h3>
+      <p class="note" style="margin-top:0">Share of passengers with no recorded age, by class.</p>
+      <div id="missing" class="missing"></div>
+    </div>
+    <aside class="reading"><p class="pull">Data quality is an equity question.</p><p>Age is missing for <b data-k="miss-3"></b> of third-class passengers, against <span data-k="miss-1"></span> in first and <span data-k="miss-2"></span> in second. Whoever is least well recorded is also least well modelled. In HR data, the same pattern shows up in contractors, frontline staff and acquired teams.</p></aside>
+  </div>
+</section>
+
+<section class="chapter" id="model" aria-labelledby="model-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">02 / Train a model on it</div><h2 id="model-title">The model learns <em>the decision.</em></h2></div><p>Five prespecified Bayesian logistic models and a random forest benchmark, scored with 20 × 5 repeated cross-validation grouped by shared ticket. Each model is compared with the reference, <b>Policy + structure</b>, on the same folds. Intervals are paired, Nadeau–Bengio corrected 95% intervals.</p></div>
+  <div class="panel grid-wide reveal">
+    <div>
+      <div class="panel-head"><div><h3>Difference from the reference model</h3><p id="metric-help"></p></div>
+        <div class="seg" role="group" aria-label="Comparison metric"><button type="button" data-metric="roc_auc" aria-pressed="true">AUC</button><button type="button" data-metric="brier" aria-pressed="false">Brier</button><button type="button" data-metric="log_loss" aria-pressed="false">Log loss</button></div>
+      </div>
+      <div id="model-chart" class="rc" role="figure" aria-label="Paired differences from the reference model with 95 percent intervals"></div>
+      <p class="note" id="baseline-note"></p>
+    </div>
+    <aside class="reading">
+      <p class="pull">The rule alone: AUC <em data-k="auc-policy"></em>. The ship alone: <span data-k="auc-structure"></span>. Together: <em data-k="auc-ref"></em>.</p>
+      <p><b>Policy</b> means sex, child and their interaction. <b>Structure</b> means class, fare per person, port of embarkation and family size. The rule carries most of the signal; the ship adds to it.</p>
+      <p>A random forest, free to find any pattern, reaches <span data-k="auc-rf"></span>: a difference of <span data-k="rf-diff"></span>. More complexity adds nothing reliable. It learns the same decision.</p>
+    </aside>
+  </div>
+</section>
+
+<section class="chapter" id="proxy" aria-labelledby="proxy-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">03 / Remove the attribute, keep the bias</div><h2 id="proxy-title">Delete the column. <em>The rule stays.</em></h2></div><p>A common reflex is to drop the protected attribute and call the model neutral. Here the observed survival gap between recorded women (<span data-k="obs-female"></span>) and men (<span data-k="obs-male"></span>) is <span data-k="obs-gap"></span>. How much of it does each model still reproduce, using out-of-fold predictions?</p></div>
+  <div class="panel grid-wide reveal">
+    <div>
+      <h3>Share of the observed female–male gap reproduced</h3>
+      <div id="proxy-chart" class="rc" role="figure" aria-label="Share of the observed female minus male survival gap reproduced by each model"></div>
+    </div>
+    <aside class="reading">
+      <p class="pull">Without sex: <em data-k="gap-blind"></em>. Add one title: <em data-k="gap-title"></em>.</p>
+      <p>A passenger’s title encodes recorded sex and, for boys, age. It carries the rule straight back in. The sex-blind model is also worse (AUC <span data-k="auc-blind"></span>), while the title model is statistically indistinguishable from the reference (<span data-k="title-diff"></span>).</p>
+      <ul class="titles" aria-label="Titles used as features"><li>Mr</li><li>Mrs</li><li>Miss</li><li>Master</li></ul>
+    </aside>
+  </div>
+  <div class="panel reveal">
+    <div class="panel-head"><div><h3>How easily can the other columns recover recorded sex?</h3><p>Cross-validated AUC for predicting recorded sex from the remaining columns: 0.5 is chance, 1.0 is perfect recovery. Range across 100 folds.</p></div></div>
+    <div class="recovery">
+      <div><span class="big-num" data-k="rec-without"></span><small>Age, class, fare, port, family<br><span data-k="rec-without-range"></span></small></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div><span class="big-num accent" data-k="rec-with"></span><small>The same columns plus title<br><span data-k="rec-with-range"></span></small></div>
+    </div>
+    <div class="callout">In HR data the proxies are rarely this blunt, but they are there: part-time status, career breaks, job family, first names, site. Test whether the remaining columns can predict the protected attribute before trusting that it is gone.</div>
+  </div>
+</section>
+
+<section class="chapter" id="audit" aria-labelledby="audit-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">04 / Audit it like an HR system</div><h2 id="audit-title">Calibrated for everyone. <em>Fair to no one?</em></h2></div><p>Treat the reference model as if it were a selection tool: anyone with a predicted probability of 0.5 or more is “selected”. Then run the checks an HR analytics team would run, on out-of-fold mean probabilities. Cells with a denominator below 20 are suppressed.</p></div>
+  <div class="panel reveal">
+    <div class="audit-head">
+      <div><b class="accent" data-k="ir-male2"></b>Impact ratio for men at 0.5 (95% CI <span data-k="ir-male-ci"></span>). In the record itself it was <span data-k="lir-male"></span>: the threshold sharpened the rule.</div>
+      <div><b data-k="cal-pair"></b>Calibration ratio, women / men: observed rate divided by mean prediction. Both groups are well calibrated.</div>
+      <div><b data-k="fpr-pair"></b>False-positive rate, women / men. Calibration and equal error rates cannot both hold when base rates differ this much.</div>
+    </div>
+    <div class="tabs seg" role="tablist" aria-label="Audit grouping">
+      <button type="button" role="tab" id="tab-sex" aria-controls="audit-panel" aria-selected="true" data-grouping="Sex">By sex</button>
+      <button type="button" role="tab" id="tab-class" aria-controls="audit-panel" aria-selected="false" tabindex="-1" data-grouping="Class">By class</button>
+      <button type="button" role="tab" id="tab-sexclass" aria-controls="audit-panel" aria-selected="false" tabindex="-1" data-grouping="Sex x class">Sex × class</button>
+    </div>
+    <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Model at 0.5</li><li><span class="key hollow" style="--c:var(--cp-text)"></span>Historical record</li><li><span class="key line"></span>Reference line</li></ul>
+    <div id="audit-panel" role="tabpanel" aria-labelledby="tab-sex" tabindex="0"><div class="multiples" id="audit-grid"></div></div>
+    <div class="grid-2" style="margin-top:28px">
+      <div class="callout"><b>The four-fifths rule of thumb.</b> US federal selection guidelines (1978) treat a selection rate below 80% of the highest group’s as evidence of possible adverse impact. Report the ratio with an interval, not as a pass/fail light. Cited as context for analysts, not legal advice.</div>
+      <div class="callout sea"><b>The impossibility.</b> When base rates differ, a model cannot be calibrated within groups <em>and</em> have equal false-positive and false-negative rates (Kleinberg, Mullainathan &amp; Raghavan, 2016; Chouldechova, 2017). An audit has to say which property it prioritises, and why.</div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="promotion" aria-labelledby="promotion-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">05 / If this were promotion data</div><h2 id="promotion-title">Plant a bias. <em>See where it goes.</em></h2></div><p>On real data the truth is unknown. So the same audit runs on a synthetic promotion history of <span data-k="sim-n"></span> invented employees, generated with a <b>known</b> penalty: women <span data-k="inj-woman"></span> log-odds, regional staff <span data-k="inj-regional"></span>, and part-time work <span data-k="inj-part"></span>, no effect at all.</p></div>
+  <div class="synthetic-band reveal" role="note"><span class="badge sea">SYNTHETIC DATA</span><span data-k="sim-warning"></span></div>
+  <div class="grid-2 reveal">
+    <div class="panel">
+      <h3>Historical decisions vs a merit-only counterfactual</h3>
+      <p class="note" style="margin-top:0">Promotion-rate impact ratios with 95% Katz intervals; the same random draws, with the penalties switched off.</p>
+      <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Historical decisions</li><li><span class="key hollow" style="--c:var(--cp-text)"></span>Merit only</li></ul>
+      <div id="sim-impact-chart" class="rc" role="figure" aria-label="Impact ratios for women and regional staff, historical versus merit only"></div>
+      <p class="note">Historically <span data-k="hist-w"></span> of women and <span data-k="hist-m"></span> of men were promoted (ratio <span data-k="hist-ir"></span>). On merit alone: <span data-k="merit-w"></span> and <span data-k="merit-m"></span> (ratio <span data-k="merit-ir"></span>).</p>
+    </div>
+    <div class="panel">
+      <h3>What the models recover</h3>
+      <p class="note" style="margin-top:0">Log-odds coefficients with 95% intervals. Diamonds mark the planted truth.</p>
+      <ul class="legend"><li><span class="key" style="--c:var(--cp-text)"></span>Gender-visible model</li><li><span class="key" style="--c:var(--cp-accent)"></span>Gender-blind model</li><li><span class="key diamond"></span>Injected truth</li></ul>
+      <div id="sim-coef-chart" class="rc" role="figure" aria-label="Recovered coefficients versus injected truth for both models"></div>
+      <p class="note">The gender-visible model recovers the penalty: <span data-k="woman-est"></span> (95% CI <span data-k="woman-ci"></span>; truth <span data-k="inj-woman2"></span>).</p>
+    </div>
+  </div>
+  <div class="panel grid-wide reveal">
+    <div>
+      <h3>Women minus men, mean predicted promotion rate</h3>
+      <p class="note" style="margin-top:0">Held-out synthetic employees (n = <span data-k="sim-test-n"></span>), in percentage points.</p>
+      <div id="sim-gap-chart" class="rc" role="figure" aria-label="Gap in mean predicted promotion between women and men for each source"></div>
+    </div>
+    <aside class="reading">
+      <p class="pull">The gap shrinks. <em>The bias moves.</em></p>
+      <p>Drop gender and the predicted gap almost vanishes. But the gender-blind model now penalises <b>part-time work</b>, <span data-k="pt-blind"></span> (95% CI <span data-k="pt-blind-ci"></span>), although its true effect is zero. Why: <span data-k="pt-w"></span> of the synthetic women work part-time, against <span data-k="pt-m"></span> of the men.</p>
+      <p>Even with no title-like proxy, the remaining columns predict gender with AUC <span data-k="sim-auc"></span>. Weak proxies still move bias. A part-time employee is now marked down for something that never mattered.</p>
+    </aside>
+  </div>
+  <article class="memo reveal" aria-labelledby="memo-title">
+    <dl class="memo-meta"><dt>To</dt><dd>People-analytics and HR data teams</dd><dt>Re</dt><dd>Before you train on historical decisions</dd><dt>Status</dt><dd>Checklist, not legal advice</dd></dl>
+    <h3 id="memo-title">An audit memo in eight lines</h3>
+    <ol class="checklist">
+      <li><b>Ask what decision produced the label.</b>Who decided, under which policy, and did it vary by manager, site or period?</li>
+      <li><b>Describe before you predict.</b>Outcome rates by group, with denominators and intervals.</li>
+      <li><b>Check who is missing.</b>Missing data that falls unevenly is a fairness finding in its own right.</li>
+      <li><b>Test proxies directly.</b>Can the other columns predict the protected attribute? Report that AUC.</li>
+      <li><b>Don’t remove the attribute and declare victory.</b>Measure how much of the gap a blind model still reproduces.</li>
+      <li><b>Report impact ratios with intervals.</b>Against the 0.8 rule of thumb, and for the record as well as the model.</li>
+      <li><b>Check calibration and error rates per group.</b>Say which one you prioritise when they conflict.</li>
+      <li><b>Suppress small cells.</b>Here, any rate with a denominator below 20 is not shown.</li>
+    </ol>
+  </article>
+</section>
+
+<section class="chapter" id="appendix" aria-labelledby="appendix-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">06 / Appendix: the original lenses</div><h2 id="appendix-title">Patterns, prediction, <em>uncertainty.</em></h2></div><p>The study’s first questions, kept for completeness: Bayesian group rates, training-only association rules, and a single held-out comparison on <span data-k="test-n"></span> passengers (<span data-k="train-n"></span> for training).</p></div>
+  <div class="appendix-bar"><label for="language" class="note">Implementation</label><select id="language"></select><span class="note" id="language-note"></span></div>
+  <div class="grid-2">
+    <div class="panel"><h3>Sex-by-class survival, Bayesian</h3><p class="note" style="margin-top:0">Posterior means and central 95% credible intervals, Beta(1,1) prior.</p><div id="rates" class="rc" role="figure" aria-label="Sex-by-class survival posterior means with credible intervals"></div><p id="rate-reading" class="note"></p></div>
+    <div class="panel"><h3>Conditional odds ratios</h3><p class="note" style="margin-top:0">Bayesian logistic regression, Laplace approximation; log scale. Associations, not effects.</p><div id="coefficients" class="rc" role="figure" aria-label="Bayesian logistic odds ratios with approximate 95 percent credible intervals"></div></div>
+  </div>
   <div class="panel">
+    <div class="panel-head"><div><h3>The held-out comparison</h3><p>Five grouped training folds (mean ± SD, not an interval), then one held-out test set. Balanced accuracy at 0.5.</p></div><span class="note" id="model-language"></span></div>
+    <div class="table-scroll"><table><thead><tr><th scope="col">MODEL</th><th scope="col">CV AUC</th><th scope="col">TEST AUC ↑</th><th scope="col">BRIER ↓</th><th scope="col">LOG LOSS ↓</th><th scope="col">BAL. ACC. ↑</th></tr></thead><tbody id="scores"></tbody></table></div>
+    <div class="model-focus"><label for="model-focus">Highlight across both plots and the scorecard</label><select id="model-focus"><option value="">All models</option><option>Prevalence baseline</option><option>Bayesian logistic</option><option>Random forest</option></select></div>
+    <p id="model-focus-status" class="note" role="status">All models shown. AUC measures ranking; Brier score and log loss measure probability quality. Highlighting does not select a winner.</p>
+    <div class="grid-2" style="margin-top:20px">
+      <figure style="margin:0"><figcaption><h3>Ranking: ROC</h3></figcaption><svg id="roc" class="plot-svg" viewBox="-12 -4 118 118" role="img" aria-label="Held-out ROC curves"></svg></figure>
+      <figure style="margin:0"><figcaption><h3>Calibration: five bins</h3></figcaption><svg id="calibration" class="plot-svg" viewBox="-12 -4 118 118" role="img" aria-label="Held-out reliability curves with five bins"></svg></figure>
+    </div>
+    <ul class="legend model-legend" id="model-legend" style="justify-content:center;margin-top:8px"></ul>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h3>Association rules (training rows only)</h3><p>Co-occurrence, not causation. Compare confidence against the outcome baseline.</p></div></div>
     <div class="controls">
-      <div><label for="support">Minimum support <output id="support-value">4%</output></label><input id="support" type="range" min="4" max="30" step="1" value="4"></div>
-      <div><label for="confidence">Minimum confidence <output id="confidence-value">60%</output></label><input id="confidence" type="range" min="60" max="100" step="5" value="60"></div>
-      <div><label for="lift">Minimum lift <output id="lift-value">1.0×</output></label><input id="lift" type="range" min="1" max="4" step=".1" value="1"></div>
+      <div><label for="confidence">Minimum confidence <output id="confidence-value" for="confidence">60%</output></label><input id="confidence" type="range" min="60" max="100" step="5" value="60"></div>
+      <div><label for="lift">Minimum lift <output id="lift-value" for="lift">1.0×</output></label><input id="lift" type="range" min="1" max="3" step=".1" value="1"></div>
     </div>
     <p id="rule-status" role="status" class="note"></p>
-    <p class="note">This page filters the exported training-only rules: support ≥4%, confidence ≥60%, joint count ≥20, lift ≥1. Change the code to remine below those bounds.</p>
-    <div id="rule-empty" class="empty" hidden>No exported rules meet these filters. Lower a threshold to return to the retained rule set.</div>
-    <div class="two-up" id="rule-results">
-      <div><div id="rule-scatter" class="plot" role="img" aria-label="Training association rules: support versus confidence, colored by lift"></div></div>
-      <div><h3>Read a rule</h3><label for="rule-select" class="note">Attribute combination → outcome</label><select id="rule-select"></select><div id="rule-metrics" class="rule-metrics"></div><p id="rule-reading"></p><p class="note">A high lift can reflect class, sex, family composition, or correlated characteristics. It does not identify a causal mechanism.</p></div>
-    </div>
+    <div id="rule-empty" class="empty" hidden>No exported rules meet these filters. Lower a threshold.</div>
+    <section id="rule-evidence" class="rule-evidence" aria-labelledby="rule-evidence-title">
+      <h3 id="rule-evidence-title">Confidence needs a comparison.</h3>
+      <p class="note">Both bars use the same outcome, on the same 0–100% scale. The baseline includes all training records, including those matching the rule; these are not independent groups.</p>
+      <div class="rule-picker"><label for="rule-select">Inspect a retained rule</label><select id="rule-select" aria-controls="rule-evidence-chart rule-evidence-reading"></select></div>
+      <div id="rule-evidence-detail" role="status" aria-atomic="true">
+        <div id="rule-evidence-chart" class="rc" role="figure" aria-label="Selected rule outcome rate compared with its training-sample baseline"></div>
+        <p id="rule-evidence-reading" class="note"></p>
+      </div>
+      <p class="note">These are observed training frequencies, not validated predictions. Rules were selected for high support, confidence and lift; overlapping attributes do not establish independent or causal effects.</p>
+    </section>
+    <div class="table-scroll" id="rule-results"><table><thead><tr><th scope="col">ATTRIBUTES → OUTCOME</th><th scope="col">SUPPORT</th><th scope="col">CONFIDENCE</th><th scope="col">BASELINE</th><th scope="col">LIFT</th><th scope="col">COUNT</th></tr></thead><tbody id="rules-body"></tbody></table></div>
   </div>
 </section>
-<section class="chapter" id="predictions">
-  <div class="chapter-head"><div><div class="chapter-number">03 / Predictive comparison</div><h2>More than<br>an accuracy score.</h2></div><p>A prevalence baseline, random forest, and Bayesian logistic model share the same split. Shared ticket groups stay together. Imputation and scaling are learned inside each training fold—not from held-out rows.</p></div>
-  <div class="panel">
-    <div class="comparison-head"><h3>The held-out comparison</h3><span class="note" id="model-language"></span></div>
-    <div class="table-scroll"><table><thead><tr><th>MODEL</th><th>CV AUC / MEAN ± SD</th><th>TEST AUC ↑</th><th>TEST BRIER ↓</th><th>TEST LOG LOSS ↓</th><th>BAL. ACCURACY ↑</th></tr></thead><tbody id="scores"></tbody></table></div>
-    <p class="model-note">CV: five training-only grouped folds; SD is fold-to-fold variability, not a 95% interval. Test: 179 rows. Balanced accuracy uses a fixed 0.5 threshold. A small holdout does not establish a universal winner.</p>
-    <div class="two-up">
-      <div><h3>Can the model rank outcomes?</h3><div id="roc" class="plot" role="img" aria-label="Held-out ROC curves for the three prespecified models"></div></div>
-      <div><h3>Do probabilities match frequencies?</h3><div id="calibration" class="plot" role="img" aria-label="Held-out reliability curves with five bins and bin counts"></div></div>
-    </div>
-    <div class="callout">AUC measures ranking. Brier score and log loss measure probability quality. Calibration points can be noisy when bins contain few records. These views answer different questions.</div>
-  </div>
-</section>
-<section class="chapter" id="uncertainty">
-  <div class="chapter-head"><div><div class="chapter-number">04 / Bayesian logistic regression</div><h2>Show the estimate.<br>Show its uncertainty.</h2></div><p>Weakly informative normal priors regularize the coefficients. A <strong>Laplace approximation</strong> describes uncertainty around the posterior mode. These are conditional associations—not the effects of changing a passenger characteristic.</p></div>
-  <div class="two-up">
-    <div class="panel"><h3>Conditional odds ratios</h3><div id="coefficients" class="plot" role="img" aria-label="Bayesian logistic odds ratios and approximate 95 percent credible intervals"></div><p class="note">Log scale. Vertical line: odds ratio 1. Continuous terms are per training standard deviation. Intercept omitted.</p></div>
-    <aside class="reading"><h3>What “Bayesian” means here</h3><ol class="reading-list"><li><strong>A prior:</strong> independent Normal(0, 2.5²) coefficient priors and Normal(0, 5²) for the intercept.</li><li><strong>An approximation:</strong> posterior mode plus inverse-Hessian covariance. Intervals are marginal, approximate 95% credible intervals—not MCMC output.</li><li><strong>A prediction convention:</strong> comparison scores use posterior-mode plug-in probabilities, not a fully integrated posterior predictive.</li><li><strong>A limit:</strong> intervals depend on the likelihood, features, priors, and approximation. They are not causal or population guarantees.</li></ol></aside>
-  </div>
-</section>
-<section class="chapter" id="reproduce">
-  <div class="chapter-head"><div><div class="chapter-number">05 / Open the work</div><h2>One study.<br>Two implementations.</h2></div><p>The feature matrices, Bayesian mode, exact rule counts, and descriptive beta summaries can be compared across languages. Forest implementations differ, so identical forest predictions are not expected.</p></div>
+
+<section class="chapter" id="reproduce" aria-labelledby="reproduce-title">
+  <div class="chapter-head reveal"><div><div class="chapter-number">07 / Reproduce and limits</div><h2 id="reproduce-title">Open the work. <em>Know its limits.</em></h2></div><p>R and Python share every split and fold. A parity script checks that the Bayesian fits and audit tables agree; the random forests are excluded because their implementations differ. This page bundles the committed result tables and makes no network requests.</p></div>
   <div class="reproduce">
-    <div class="panel"><h3>Start in R</h3><p>RStudio project, arules, randomForest, Bayesian optimization, ggplot2, and an executed analysis narrative.</p><a href="https://github.com/mberca/titanic-patterns/tree/main/R">R code & instructions ↗</a></div>
-    <div class="panel"><h3>Read the Python edition</h3><p>Scikit-learn, mlxtend, SciPy, a reproducible pipeline, and an executed Jupyter notebook.</p><a href="https://github.com/mberca/titanic-patterns/tree/main/Python">Python code & instructions ↗</a></div>
-    <div class="panel"><h3>Inspect the evidence</h3><p>Source provenance, the shared split, the prespecified analysis contract, and exported results.</p><a href="https://github.com/mberca/titanic-patterns">Repository & methodology ↗</a></div>
+    <div class="panel">
+      <h3>Run it (Windows, from the repository root)</h3>
+<pre><span class="c"># Python reference edition (about 90 s, includes the audit)</span>
+.\.venv\Scripts\python.exe -m Python.run_analysis
+.\.venv\Scripts\python.exe -m pytest tests -q
+
+<span class="c"># R edition</span>
+&amp; 'C:\Program Files\R\R-4.4.3\bin\Rscript.exe' R\run_analysis.R
+&amp; 'C:\Program Files\R\R-4.4.3\bin\Rscript.exe' R\test-analysis.R
+
+<span class="c"># Cross-language parity, then rebuild this page</span>
+.\.venv\Scripts\python.exe scripts\check_parity.py
+.\.venv\Scripts\python.exe scripts\build_story.py</pre>
+      <div class="links"><a href="https://github.com/mberca/titanic-patterns">Repository ↗</a><a href="https://github.com/mberca/titanic-patterns/blob/main/METHODOLOGY.md">Methodology ↗</a><a href="https://github.com/mberca/titanic-patterns/tree/main/R">R edition ↗</a><a href="https://github.com/mberca/titanic-patterns/tree/main/Python">Python edition ↗</a><a href="https://github.com/mberca/titanic-patterns/tree/main/data">Data provenance ↗</a></div>
+    </div>
+    <div class="panel">
+      <h3>What this cannot tell us</h3>
+      <ul class="limits">
+        <li><b>Passengers only.</b> <span data-k="source"></span>. <span data-k="coverage"></span>.</li>
+        <li><b>Recorded sex is binary in the source.</b> These are recorded categories, not identities.</li>
+        <li><b>Ages are missing</b> for <span data-k="miss-all"></span> of passengers, unevenly by class.</li>
+        <li><b>Associations, not causes.</b> Nothing here explains why any individual lived or died.</li>
+        <li><b>Synthetic means synthetic.</b> The promotion data shows mechanics, not any real organisation.</li>
+        <li><b>Context, not legal advice.</b> The four-fifths rule and impossibility results frame the audit; they do not settle it.</li>
+      </ul>
+    </div>
   </div>
-  <details><summary>Data provenance, safeguards, and what this study cannot tell us</summary><div class="method-grid"><p><strong>Public, historical data.</strong> The 891-row labeled sample is distributed by Paul Hendricks’ titanic package, whose source declares CC0. The revision and checksum are pinned. Names, cabin strings, and ticket strings are not committed. <a href="https://github.com/mberca/titanic-patterns/tree/main/data">Data provenance ↗</a></p><p><strong>Leakage safeguards.</strong> Shared tickets stay within groups. IDs and grouping keys never enter the predictors. Imputation, centering, and scaling use training data only, including inside validation folds. Hyperparameters and priors are fixed before looking at test results.</p><p><strong>Selection and scope.</strong> This is not the complete ship manifest, nor a random sample for a modern application. Missing ages and historical recording choices constrain interpretation. Ticket groups do not perfectly identify families.</p><p><strong>Descriptive, not prescriptive.</strong> Sex, class, and other observed characteristics are correlated with many unmeasured historical circumstances. No causal effect, rescue recommendation, fairness guarantee, or statistically significant model superiority is asserted.</p></div></details>
 </section>
 </main>
-<footer><span>Titanic / Patterns, Prediction & Uncertainty · Real public data</span><a href="https://github.com/mberca">Back to the portfolio ↗</a><span>Offline-ready · no analytics · no external assets</span></footer>
+<footer><span data-k="credit"></span><span>Margarita Bermejo Cano · People Science · <a href="https://github.com/mberca">Portfolio ↗</a></span><span>Offline · no analytics · no external requests</span></footer>
 </div>
 <noscript><p>This interactive story needs JavaScript. The repository contains the same results as CSVs and executed analyses.</p></noscript>
-<script>__PLOTLY__</script>
 <script id="story-data" type="application/json">__DATA__</script>
 <script>
 "use strict";
-const DATA=JSON.parse(document.getElementById("story-data").textContent);
 const $=id=>document.getElementById(id);
-const pct=n=>(100*n).toFixed(1)+"%";
-const models=["Prevalence baseline","Random forest","Bayesian logistic"];
-const config={responsive:true,displayModeBar:false,scrollZoom:false};
-let visibleRules=[];
-function palette(){
-  const css=getComputedStyle(document.documentElement);
-  return Object.fromEntries(["surface","surface-soft","border","border-strong","text","text-muted","accent"].map(k=>[k,css.getPropertyValue("--cp-"+k).trim()]));
+const DATA=JSON.parse($("story-data").textContent);
+const A=DATA.audit,S=DATA.synthetic,SUM=DATA.summary;
+const MOTION=window.matchMedia("(prefers-reduced-motion: no-preference)").matches;
+const minus=s=>s.replace(/^-/,"\u2212");
+function num(v,d=2){const r=Number(v.toFixed(d));return minus((Object.is(r,-0)?0:r).toFixed(d));}
+const pct=(v,d=1)=>num(100*v,d)+"%";
+const signed=(v,d=3)=>(v>0?"+":"")+num(v,d);
+const thousands=v=>Math.round(v).toLocaleString("en-GB");
+const C={accent:"var(--cp-accent)",text:"var(--cp-text)",muted:"var(--cp-border-strong)",sea:"var(--cp-sea)"};
+function h(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function setK(key,value){for(const n of document.querySelectorAll(`[data-k="${key}"]`))n.textContent=value;}
+const find=(rows,pred)=>{const r=rows.find(pred);if(!r)throw new Error("Missing row in story data");return r;};
+
+function niceScale(lo,hi,n=5){
+  const span=hi-lo||1,raw=span/n,mag=10**Math.floor(Math.log10(raw)),err=raw/mag;
+  const step=mag*(err<1.5?1:err<3?2:err<7?5:10);
+  const a=Math.floor(lo/step-1e-9)*step,b=Math.ceil(hi/step+1e-9)*step,ticks=[];
+  for(let v=a;v<=b+step/2;v+=step)ticks.push(Number(v.toFixed(10)));
+  return {domain:[ticks[0],ticks[ticks.length-1]],ticks};
 }
-function layout(C){
-  return {paper_bgcolor:C.surface,plot_bgcolor:C.surface,font:{family:'"Segoe UI", Aptos, Calibri, sans-serif',color:C.text,size:11},
-    margin:{l:62,r:28,t:20,b:64},hoverlabel:{bgcolor:C.surface,bordercolor:C.border,font:{color:C.text}},
-    xaxis:{gridcolor:C.border,zeroline:false},yaxis:{gridcolor:C.border,zeroline:false},
-    legend:{orientation:"h",x:0,y:-.24,font:{size:10}}};
-}
-function sample(){return DATA.languages[$("language").value];}
-function mean(values){return values.reduce((a,b)=>a+b,0)/values.length;}
-function sd(values){const m=mean(values);return Math.sqrt(values.reduce((a,b)=>a+(b-m)**2,0)/(values.length-1));}
-function colorFor(model,C){return model==="Bayesian logistic"?C.accent:model==="Random forest"?C["border-strong"]:C["text-muted"];}
-function drawRates(){
-  const C=palette(),rates=sample().bayesian_rates.slice().sort((a,b)=>a.sex.localeCompare(b.sex)||a.pclass-b.pclass);
-  const labels=rates.map(r=>r.sex+" / class "+r.pclass);
-  Plotly.react("rates",[{
-    type:"scatter",mode:"markers",x:rates.map(r=>r.posterior_mean),y:labels,
-    marker:{size:11,color:rates.map(r=>r.sex==="female"?C.accent:C["border-strong"])},
-    error_x:{type:"data",symmetric:false,array:rates.map(r=>r.upper-r.posterior_mean),arrayminus:rates.map(r=>r.posterior_mean-r.lower),color:C["border-strong"],thickness:1.5},
-    customdata:rates.map(r=>[r.n,r.survived,r.observed_rate,r.lower,r.upper]),
-    hovertemplate:"%{y}<br>%{customdata[1]} survived / %{customdata[0]} records<br>Observed %{customdata[2]:.1%}<br>Posterior mean %{x:.1%}<br>95% credible interval %{customdata[3]:.1%}–%{customdata[4]:.1%}<extra></extra>"
-  }],{...layout(C),showlegend:false,margin:{l:105,r:26,t:20,b:55},xaxis:{title:{text:"Survival probability / observed sample"},range:[0,1],tickformat:".0%",gridcolor:C.border},yaxis:{autorange:"reversed",gridcolor:C.border}},config);
-  const highest=rates.reduce((a,b)=>a.posterior_mean>b.posterior_mean?a:b);
-  $("rate-reading").textContent=`In this labeled sample, ${highest.sex} passengers in class ${highest.pclass} have the highest group posterior mean (${pct(highest.posterior_mean)}), based on ${highest.survived} survivors among ${highest.n} records. This is a descriptive comparison, not a reason for the difference.`;
-}
-function ruleDetail(){
-  const rule=visibleRules[Number($("rule-select").value)];
-  $("rule-metrics").replaceChildren();
-  if(!rule)return;
-  for(const [label,value] of [["Support",pct(rule.support)],["Confidence",pct(rule.confidence)],["Outcome baseline",pct(rule.baseline)],["Lift",rule.lift.toFixed(2)+"×"]]){
-    const item=document.createElement("div"),valueNode=document.createElement("strong"),labelNode=document.createElement("span");
-    valueNode.textContent=value;labelNode.textContent=label;item.append(valueNode,labelNode);$("rule-metrics").append(item);
-  }
-  $("rule-reading").textContent=`${rule.count} of ${rule.N} training records contain both sides. Among ${rule.antecedent_count} records matching the attributes, ${pct(rule.confidence)} have this outcome. The same outcome appears in ${pct(rule.baseline)} of all training records.`;
-}
-function drawRules(){
-  const C=palette(),support=Number($("support").value)/100,confidence=Number($("confidence").value)/100,lift=Number($("lift").value);
-  $("support-value").value=pct(support);$("confidence-value").value=pct(confidence);$("lift-value").value=lift.toFixed(1)+"×";
-  visibleRules=sample().rules.filter(r=>r.support+1e-12>=support&&r.confidence+1e-12>=confidence&&r.lift+1e-12>=lift);
-  $("rule-status").textContent=`${visibleRules.length} exported training rules meet the current filters.`;
-  $("rule-empty").hidden=visibleRules.length>0;$("rule-results").hidden=!visibleRules.length;
-  $("rule-select").replaceChildren(...visibleRules.map((r,i)=>new Option(r.antecedent+" → "+r.consequent,String(i))));
-  if(!visibleRules.length)return;
-  ruleDetail();
-  Plotly.react("rule-scatter",[{
-    type:"scatter",mode:"markers",x:visibleRules.map(r=>r.support),y:visibleRules.map(r=>r.confidence),
-    marker:{size:11,color:visibleRules.map(r=>r.lift),colorscale:[[0,C["border-strong"]],[1,C.accent]],colorbar:{title:{text:"Lift"},thickness:10}},
-    customdata:visibleRules.map(r=>[r.antecedent,r.consequent,r.count,r.lift]),
-    hovertemplate:"%{customdata[0]}<br>→ %{customdata[1]}<br>Support %{x:.1%} · confidence %{y:.1%}<br>n=%{customdata[2]} · lift %{customdata[3]:.2f}<extra></extra>"
-  }],{...layout(C),showlegend:false,xaxis:{title:{text:"Support / training rows"},tickformat:".0%",gridcolor:C.border},yaxis:{title:{text:"Confidence / matching attributes"},tickformat:".0%",gridcolor:C.border}},config);
-}
-function scoreTable(){
-  const d=sample();$("scores").replaceChildren();
-  for(const model of models){
-    const test=d.metrics.find(r=>r.phase==="test"&&r.model===model);
-    const cv=d.metrics.filter(r=>r.phase==="cv"&&r.model===model).map(r=>r.roc_auc);
-    const tr=document.createElement("tr");
-    for(const value of [model,mean(cv).toFixed(3)+" ± "+sd(cv).toFixed(3),test.roc_auc.toFixed(3),test.brier.toFixed(3),test.log_loss.toFixed(3),test.balanced_accuracy.toFixed(3)]){
-      const td=document.createElement("td");td.textContent=value;tr.append(td);
+/* Accessible, responsive dot / interval / bar chart built from HTML. */
+function rangeChart(box,o){
+  const [a,b]=o.domain,T=o.scale==="log"?Math.log10:(v=>v);
+  const x=v=>Math.max(0,Math.min(100,(T(v)-T(a))/(T(b)-T(a))*100));
+  box.replaceChildren();
+  for(const r of o.rows){
+    const row=h("div","rc-row"+(r.cls?" "+r.cls:""));
+    const label=h("div","rc-label",r.label);if(r.sub)label.append(h("small","",r.sub));
+    const track=h("div","rc-track");
+    for(const ref of o.refs||[]){const l=h("span","rc-ref"+(ref.strong?" strong":""));l.style.left=x(ref.v)+"%";track.append(l);}
+    if(r.suppressed)track.append(h("span","rc-suppressed",r.suppressed));
+    if(r.link){const [p,q]=r.link.map(x).sort((m,n)=>m-n),l=h("span","rc-link");l.style.left=p+"%";l.style.width=(q-p)+"%";track.append(l);}
+    for(const m of r.marks||[]){
+      const c=m.color||C.text;
+      if(m.bar){const [p,q]=[x(m.from??0),x(m.est)].sort((s,t)=>s-t),e=h("span","rc-bar");e.style.cssText=`left:${p}%;width:${Math.max(q-p,.5)}%;--c:${c}`;track.append(e);}
+      if(m.lo!=null&&m.hi!=null){const p=x(m.lo),q=x(m.hi),e=h("span","rc-ci");e.style.cssText=`left:${p}%;width:${Math.max(q-p,.6)}%;--c:${c}`;track.append(e);}
+      if(!m.bar){const d=h("span","rc-dot"+(m.shape?" "+m.shape:""));d.style.cssText=`left:${x(m.est)}%;--c:${c}`;if(m.title)d.title=m.title;track.append(d);}
+      if(m.text){const pos=x(m.est),t=h("span","rc-val"+(m.below?" below":"")+(pos<9?" al":pos>91?" ar":""),m.text);t.style.cssText=`left:${pos}%;--c:${c}`;track.append(t);}
     }
-    $("scores").append(tr);
+    const end=h("div","rc-end");
+    if(r.end){end.append(h("b","",r.end[0]));if(r.end[1]){end.append(document.createElement("br"),r.end[1]);}}
+    row.append(label,track,end);box.append(row);
   }
-  $("model-language").textContent=$("language").value+" implementation";
+  const axis=h("div","rc-axis"),ticks=h("div","rc-ticks");
+  for(const t of o.ticks){const s=h("span","",o.tick(t));s.style.left=x(t)+"%";ticks.append(s);}
+  axis.append(h("div"),ticks,h("div"));
+  if(o.caption)axis.append(h("div","rc-caption",o.caption));
+  box.append(axis);
 }
-function rocPoints(rows){
-  const sorted=rows.slice().sort((a,b)=>b.probability-a.probability);
-  const positives=rows.reduce((s,r)=>s+r.Survived,0),negatives=rows.length-positives;
-  let tp=0,fp=0;const x=[0],y=[0];
-  for(let i=0;i<sorted.length;i++){
-    tp+=sorted[i].Survived;fp+=1-sorted[i].Survived;
-    if(i===sorted.length-1||sorted[i+1].probability!==sorted[i].probability){x.push(fp/negatives);y.push(tp/positives);}
-  }
-  return {x,y};
+const PCT_TICKS={domain:[0,1],ticks:[0,.25,.5,.75,1],tick:v=>Math.round(100*v)+"%"};
+
+/* ---------- Facts bound into the prose ---------- */
+const pg=(g,c)=>find(A.policy_groups,r=>r.group===g&&r.pclass===c);
+const side=s=>find(A.boat_side,r=>r.side===s);
+const miss=c=>find(A.missing_age,r=>r.pclass===c);
+const cmp=(m,metric="roc_auc")=>find(A.model_comparison,r=>r.model===m&&r.metric===metric);
+const gap=s=>find(A.proxy_gap,r=>r.source===s);
+const rec=f=>find(A.sex_recovery,r=>r.features===f);
+const audit=(g,grp)=>find(A.fairness_audit,r=>r.grouping===g&&r.group===grp);
+const simImpact=(l,g)=>find(A.sim_impact,r=>r.label===l&&r.group===g);
+const simCoef=(m,t)=>find(A.sim_coefficients,r=>r.model===m&&r.term===t);
+const ciText=(lo,hi,d=2,f=num)=>`${f(lo,d)} to ${f(hi,d)}`;
+function bindFacts(){
+  const F={},prov=DATA.provenance;
+  F.rows=thousands(prov.rows);F.credit=prov.required_credit;F.source=prov.source_name;F.coverage=prov.coverage;
+  for(const c of ["All","1","2","3"]){const k=c==="All"?"all":c;F["wc-"+k]=pct(pg("Women and children",c).rate);F["men-"+k]=pct(pg("Men",c).rate);}
+  for(const [k,s] of [["stb","Starboard"],["port","Port"]]){const r=side(s);F[k+"-share"]=pct(r.adult_men_share,0);F[k+"-men"]=thousands(r.adult_men);F[k+"-n"]=thousands(r.n);F[k+"-ci"]=`${pct(r.lower,0)}–${pct(r.upper,0)}`;}
+  const unknown=A.boat_side.filter(r=>r.side!=="Starboard"&&r.side!=="Port").reduce((s,r)=>s+r.n,0);
+  F["unknown-n"]=unknown===1?"One":thousands(unknown);
+  for(const c of ["All","1","2","3"])F["miss-"+(c==="All"?"all":c)]=pct(miss(c).missing_share);
+  F["auc-ref"]=num(cmp("Policy + structure").mean_model,3);F["auc-policy"]=num(cmp("Policy only").mean_model,2);
+  F["auc-structure"]=num(cmp("Structure only").mean_model,2);F["auc-blind"]=num(cmp("Sex-blind").mean_model,2);
+  F["auc-rf"]=num(cmp("Random forest").mean_model,3);
+  const rf=cmp("Random forest"),tl=cmp("Sex-blind + title");
+  F["rf-diff"]=`${signed(rf.mean_difference,3)} (95% CI ${ciText(rf.lower,rf.upper,3)})`;
+  F["title-diff"]=`AUC difference ${signed(tl.mean_difference,3)}, 95% CI ${ciText(tl.lower,tl.upper,3)}`;
+  const obs=gap("Observed outcomes");
+  F["obs-female"]=pct(obs.female_mean);F["obs-male"]=pct(obs.male_mean);F["obs-gap"]=num(100*obs.gap,1)+" percentage points";
+  F["gap-ref"]=pct(gap("Policy + structure").share_of_observed_gap,0);F["gap-blind"]=pct(gap("Sex-blind").share_of_observed_gap,0);F["gap-title"]=pct(gap("Sex-blind + title").share_of_observed_gap,0);
+  const r0=rec("Without title"),r1=rec("With title");
+  F["rec-without"]=num(r0.mean_auc,2);F["rec-with"]=num(r1.mean_auc,4);
+  F["rec-without-range"]=`${r0.folds} folds: ${num(r0.min_auc,2)}–${num(r0.max_auc,2)}`;F["rec-with-range"]=`${r1.folds} folds: ${num(r1.min_auc,4)}–${num(r1.max_auc,4)}`;
+  const fe=audit("Sex","Female"),ma=audit("Sex","Male");
+  F["ir-male"]=F["ir-male2"]=num(ma.impact_ratio,3);F["ir-male-ci"]=`${num(ma.ir_lower,3)}–${num(ma.ir_upper,3)}`;F["lir-male"]=num(ma.label_impact_ratio,2);
+  F["cal-pair"]=`${num(fe.calibration_ratio,2)} / ${num(ma.calibration_ratio,2)}`;F["fpr-pair"]=`${num(fe.fpr,2)} / ${num(ma.fpr,3)}`;
+  F["sim-n"]=thousands(S.n);F["sim-warning"]=S.warning;F["sim-test-n"]=thousands(S.test_n);
+  F["inj-woman"]=F["inj-woman2"]=num(S.injected.woman,2);F["inj-regional"]=num(S.injected.regional,2);F["inj-part"]=num(S.injected.part_time,2);
+  const hw=simImpact("Historical decisions","Woman"),hm=simImpact("Historical decisions","Man"),mw=simImpact("Merit-only counterfactual","Woman"),mm=simImpact("Merit-only counterfactual","Man");
+  F["hist-w"]=pct(hw.rate);F["hist-m"]=pct(hm.rate);F["hist-ir"]=num(hw.impact_ratio,2);F["merit-w"]=pct(mw.rate);F["merit-m"]=pct(mm.rate);F["merit-ir"]=num(mw.impact_ratio,2);
+  const wv=simCoef("Gender visible","woman"),pb=simCoef("Gender-blind","part_time");
+  F["woman-est"]=num(wv.estimate,2);F["woman-ci"]=ciText(wv.lower,wv.upper);F["pt-blind"]=num(pb.estimate,2);F["pt-blind-ci"]=ciText(pb.lower,pb.upper);
+  F["pt-w"]=pct(S.part_time.Woman.part_time/S.part_time.Woman.n);F["pt-m"]=pct(S.part_time.Man.part_time/S.part_time.Man.n);
+  F["sim-auc"]=num(A.sim_recovery[0].test_auc,2);
+  F["test-n"]=thousands(SUM.test_n);F["train-n"]=thousands(SUM.train_n);
+  for(const [k,v] of Object.entries(F))setK(k,v);
 }
-function drawPredictions(){
-  const C=palette(),predictions=sample().predictions;
-  const roc=[],calibration=[{type:"scatter",mode:"lines",x:[0,1],y:[0,1],name:"Perfect calibration",line:{color:C.border,dash:"dot"},hoverinfo:"skip"}];
-  for(const model of models){
-    const rows=predictions.filter(r=>r.model===model),points=rocPoints(rows);
-    const style={color:colorFor(model,C),width:model==="Bayesian logistic"?2.5:1.5,dash:model==="Prevalence baseline"?"dot":"solid"};
-    roc.push({type:"scatter",mode:"lines",...points,name:model,line:style,hovertemplate:"False positive rate %{x:.1%}<br>True positive rate %{y:.1%}<extra>"+model+"</extra>"});
-    const bins=Array.from({length:5},()=>[]);
-    rows.forEach(r=>bins[Math.min(4,Math.floor(r.probability*5))].push(r));
-    const populated=bins.filter(b=>b.length);
-    calibration.push({type:"scatter",mode:"markers+lines",name:model,line:style,
-      x:populated.map(b=>mean(b.map(r=>r.probability))),y:populated.map(b=>mean(b.map(r=>r.Survived))),
-      marker:{size:populated.map(b=>7+Math.sqrt(b.length)),color:colorFor(model,C)},
-      customdata:populated.map(b=>b.length),
-      hovertemplate:"Mean prediction %{x:.1%}<br>Observed survival %{y:.1%}<br>Bin n=%{customdata}<extra>"+model+"</extra>"});
+
+/* ---------- Chapter 1: the rule and the ship ---------- */
+const CLASS_NAME={All:"All classes","1":"First class","2":"Second class","3":"Third class"};
+function drawPolicy(){
+  rangeChart($("policy-chart"),{...PCT_TICKS,caption:"Survival in the record",rows:["All","1","2","3"].map(c=>{
+    const w=pg("Women and children",c),m=pg("Men",c);
+    return {label:CLASS_NAME[c],sub:`n = ${thousands(w.n)} women & children · ${thousands(m.n)} men`,link:[m.rate,w.rate],
+      marks:[{est:w.rate,lo:w.lower,hi:w.upper,color:C.accent,text:pct(w.rate)},{est:m.rate,lo:m.lower,hi:m.upper,color:C.text,text:pct(m.rate),below:true}],
+      end:[num(100*(w.rate-m.rate),0)+" pts","gap"]};
+  })});
+}
+function drawChildren(){
+  const cut=Number(document.querySelector('input[name="cutoff"]:checked').value);
+  const rows=A.child_cutoffs.filter(r=>r.cutoff===cut);
+  rangeChart($("child-chart"),{...PCT_TICKS,caption:"Children’s survival in the record",rows:["All","1","2","3"].map(c=>{
+    const r=find(rows,x=>x.pclass===c);
+    return {label:CLASS_NAME[c],sub:`children under ${cut}`,marks:[{est:r.rate,lo:r.lower,hi:r.upper,color:C.accent,text:pct(r.rate)}],end:[`${thousands(r.survived)} of ${thousands(r.n)}`,"survived"]};
+  })});
+  const all=find(rows,r=>r.pclass==="All"),third=find(rows,r=>r.pclass==="3");
+  $("child-status").textContent=`Under ${cut}: ${thousands(all.n)} children in the record, ${pct(all.rate)} survived. In third class, ${pct(third.rate)} (${thousands(third.survived)} of ${thousands(third.n)}).`;
+}
+const SVGNS="http://www.w3.org/2000/svg";
+function s(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,v);if(parent)parent.append(e);return e;}
+const HISTORY={seats:1178,saved:711,source:"British Wreck Commissioner’s Inquiry (1912)"};
+function drawSeats(){
+  const svg=$("seats"),cols=62,g=s("g",{},svg);
+  for(let i=0;i<HISTORY.seats;i++){
+    const c=i%cols,r=Math.floor(i/cols);
+    const e=s("circle",{cx:5+10*c,cy:5+10*r,r:3.3,class:"seat"+(i<HISTORY.saved?"":" empty")},g);
+    e.style.setProperty("--d",String(c*22+r*8));
   }
-  const axes={range:[0,1],tickformat:".0%",gridcolor:C.border};
-  Plotly.react("roc",roc,{...layout(C),xaxis:{...axes,title:{text:"False positive rate"}},yaxis:{...axes,title:{text:"True positive rate"}}},config);
-  Plotly.react("calibration",calibration,{...layout(C),xaxis:{...axes,title:{text:"Mean predicted survival"}},yaxis:{...axes,title:{text:"Observed survival in bin"}}},config);
+}
+const BOATS=[
+  ["1",835,"S"],["3",780,"S"],["5",725,"S"],["7",670,"S"],["9",380,"S"],["11",325,"S"],["13",270,"S"],["15",215,"S"],
+  ["2",835,"P"],["4",780,"P"],["6",725,"P"],["8",670,"P"],["10",380,"P"],["12",325,"P"],["14",270,"P"],["16",215,"P"],
+  ["C",888,"S",1],["D",888,"P",1],["A",760,"S",2],["B",760,"P",2]];
+function drawDeck(){
+  const svg=$("deck"),share={P:side("Port").adult_men_share,S:side("Starboard").adult_men_share};
+  const defs=s("defs",{},svg);
+  for(const y of [26,40,280,294])s("path",{class:"water",d:`M20 ${y} q 30 -6 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0 t 60 0`},svg);
+  s("path",{class:"hull",d:"M60 160C60 105 110 82 200 80H790C880 80 945 120 975 160C945 200 880 240 790 240H200C110 238 60 215 60 160Z"},svg);
+  s("rect",{class:"house",x:180,y:120,width:620,height:80,rx:8},svg);
+  for(const fx of [330,450,570,690])s("ellipse",{class:"funnel",cx:fx,cy:160,rx:22,ry:13},svg);
+  BOATS.forEach(([name,cx,sd,kind],i)=>{
+    const w=kind?36:48,hgt=kind?13:17;
+    const y=kind===2?(sd==="P"?126:181):kind===1?(sd==="P"?106:201):(sd==="P"?91:212);
+    const x=cx-w/2,id="boat-clip-"+i;
+    const clip=s("clipPath",{id},defs);s("rect",{x,y,width:w,height:hgt,rx:hgt/2},clip);
+    s("rect",{class:"boat",x,y,width:w,height:hgt,rx:hgt/2},svg);
+    s("rect",{class:"boat-fill",x,y,width:w*share[sd],height:hgt,"clip-path":`url(#${id})`},svg);
+    s("rect",{x,y,width:w,height:hgt,rx:hgt/2,fill:"none",stroke:"var(--cp-text)","stroke-width":1.2},svg);
+    if(!kind||kind===1){const t=s("text",{class:"boat-num",x:cx,y:sd==="P"?(kind?96:74):(kind?232:258)},svg);t.textContent=name;}
+  });
+  const lab=(txt,x,y,cls,anchor)=>{const t=s("text",{class:cls,x,y,"text-anchor":anchor||"start"},svg);t.textContent=txt;};
+  lab("PORT",60,58,"side-label");lab("STARBOARD",60,274,"side-label");lab("BOW \u2192",975,58,"bow","end");
+}
+function drawMissing(){
+  const box=$("missing");box.replaceChildren();
+  const top=Math.max(...["1","2","3"].map(c=>miss(c).missing_share));
+  for(const c of ["1","2","3"]){
+    const r=miss(c),col=h("div","col"+(r.missing_share===top?" hi":""));
+    col.append(h("div","kicker",CLASS_NAME[c]));
+    const meter=h("div","meter"),bar=h("i");bar.style.height=(r.missing_share/0.35*100)+"%";meter.append(bar);
+    meter.setAttribute("aria-hidden","true");
+    col.append(meter,h("b","",pct(r.missing_share)),h("span","note",`${thousands(r.missing_age)} of ${thousands(r.n)} with no age · 95% interval ${pct(r.lower,0)}–${pct(r.upper,0)}`));
+    box.append(col);
+  }
+}
+/* ---------- Chapter 2: train a model ---------- */
+const METRIC={roc_auc:{name:"AUC",better:"higher",help:"AUC: higher ranks survivors above non-survivors more often. A difference below zero is worse than the reference.",d:3},
+  brier:{name:"Brier score",better:"lower",help:"Brier score: lower is better. A difference above zero is worse than the reference.",d:3},
+  log_loss:{name:"Log loss",better:"lower",help:"Log loss: lower is better. A difference above zero is worse than the reference.",d:3}};
+const MODEL_ORDER=[["Policy + structure","Reference: rule + ship"],["Policy only","Sex, child, interaction"],["Structure only","Class, fare, port, family"],["Sex-blind","Everything except sex"],["Sex-blind + title","Sex-blind, plus Mr/Mrs/Miss/Master"],["Random forest","Benchmark, all columns"]];
+function drawModel(metric){
+  const M=METRIC[metric],rows=A.model_comparison.filter(r=>r.metric===metric);
+  const shown=MODEL_ORDER.map(([m])=>find(rows,r=>r.model===m));
+  const lo=Math.min(0,...shown.map(r=>r.lower)),hi=Math.max(0,...shown.map(r=>r.upper));
+  const sc=niceScale(lo,hi,5);
+  rangeChart($("model-chart"),{...sc,tick:v=>signed(v,2).replace("+0.00","0"),refs:[{v:0,strong:true}],caption:`Difference in ${M.name} from the reference (paired 95% interval)`,
+    rows:MODEL_ORDER.map(([m,sub])=>{
+      const r=find(rows,x=>x.model===m),ref=m==="Policy + structure";
+      const excl=!ref&&(r.lower>0||r.upper<0);
+      return {label:m,sub,cls:ref?"is-ref":"",marks:[ref?{est:0,color:C.text,shape:"diamond"}:{est:r.mean_difference,lo:r.lower,hi:r.upper,color:excl?C.accent:C.text,shape:excl?"":"hollow",text:signed(r.mean_difference,3)}],
+        end:[num(r.mean_model,M.d),M.name]};
+    })});
+  $("metric-help").textContent=M.help;
+  const b=find(rows,r=>r.model==="Prevalence baseline");
+  $("baseline-note").textContent=`Not shown: a prevalence baseline that predicts the same probability for everyone, ${M.name} ${num(b.mean_model,3)} (difference ${signed(b.mean_difference,3)}). Filled markers: interval excludes zero. Hollow: no reliable difference.`;
+  for(const btn of document.querySelectorAll("[data-metric]"))btn.setAttribute("aria-pressed",String(btn.dataset.metric===metric));
+}
+
+/* ---------- Chapter 3: proxies ---------- */
+function drawProxy(){
+  const rows=[["Policy + structure","Sees recorded sex"],["Sex-blind","Sex removed"],["Sex-blind + title","Sex removed, title kept"]];
+  rangeChart($("proxy-chart"),{domain:[0,1],ticks:[0,.25,.5,.75,1],tick:v=>Math.round(100*v)+"%",refs:[{v:1,strong:true}],caption:"Share of the observed gap reproduced by out-of-fold predictions",
+    rows:rows.map(([m,sub])=>{const r=gap(m);const c=m==="Sex-blind"?C.muted:m==="Sex-blind + title"?C.accent:C.text;
+      return {label:m,sub,marks:[{bar:true,est:r.share_of_observed_gap,color:c,text:pct(r.share_of_observed_gap,0)}],end:[num(100*r.gap,1)+" pts",`${pct(r.female_mean,0)} vs ${pct(r.male_mean,0)}`]};})});
+}
+
+/* ---------- Chapter 4: audit ---------- */
+const AUDIT_PANELS=[
+  {key:"cal",title:"Calibration",help:"Observed rate (hollow) and mean predicted probability (filled). Close together means calibrated.",scale:PCT_TICKS,
+    mark:r=>({marks:[{est:r.base_rate,color:C.text,shape:"hollow"},{est:r.mean_predicted,color:C.accent,text:pct(r.mean_predicted,0)}],end:["×"+num(r.calibration_ratio,2),"obs / pred"]})},
+  {key:"sel",title:"Selection rate",help:"Share predicted to survive (p ≥ 0.5), with 95% Wilson interval; hollow is the recorded outcome rate.",scale:PCT_TICKS,
+    mark:r=>({marks:[{est:r.base_rate,color:C.text,shape:"hollow"},{est:r.selection_rate,lo:r.selection_lower,hi:r.selection_upper,color:C.accent,text:pct(r.selection_rate,0)}],end:[thousands(r.n),"n"]})},
+  {key:"ir",title:"Impact ratio",help:"Selection rate relative to the highest group, 95% Katz interval. Line at 0.8: the four-fifths rule of thumb.",scale:{domain:[0,1.2],ticks:[0,.4,.8,1.2],tick:v=>num(v,1)},refs:[{v:.8,strong:true},{v:1}],
+    mark:r=>({marks:[{est:Math.min(r.label_impact_ratio,1.2),color:C.text,shape:"hollow"},{est:Math.min(r.impact_ratio,1.2),lo:r.ir_lower,hi:Math.min(r.ir_upper,1.2),color:r.impact_ratio<.8?C.accent:C.text,text:num(r.impact_ratio,r.impact_ratio<.1?3:2)}],end:[num(r.label_impact_ratio,2),"record"]})},
+  {key:"tpr",title:"True-positive rate",help:"Of those who survived, the share the model selected.",scale:PCT_TICKS,metric:"tpr"},
+  {key:"fpr",title:"False-positive rate",help:"Of those who died, the share the model selected.",scale:PCT_TICKS,metric:"fpr"},
+  {key:"ppv",title:"Positive predictive value",help:"Of those selected, the share who survived.",scale:PCT_TICKS,metric:"ppv"}];
+function errorMark(r,m){
+  const den=r[m+"_denominator"];
+  if(r[m]==null)return {suppressed:`n<20 (n = ${thousands(den)})`,end:["—","suppressed"]};
+  return {marks:[{est:r[m],lo:r[m+"_lower"],hi:r[m+"_upper"],color:C.accent,text:pct(r[m],r[m]<.01?1:0)}],end:[thousands(den),"denom."]};
+}
+function drawAudit(grouping){
+  const rows=A.fairness_audit.filter(r=>r.grouping===grouping),grid=$("audit-grid");grid.replaceChildren();
+  for(const P of AUDIT_PANELS){
+    const fig=h("figure","multiple");fig.style.margin="0";fig.dataset.panel=P.key;
+    const cap=h("figcaption");cap.append(h("h3","",P.title),h("p","",P.help));
+    const box=h("div","rc");box.setAttribute("role","img");box.setAttribute("aria-label",`${P.title} by ${grouping.toLowerCase()}`);
+    fig.append(cap,box);grid.append(fig);
+    rangeChart(box,{...P.scale,refs:P.refs,rows:rows.map(r=>({label:r.group,...(P.metric?errorMark(r,P.metric):P.mark(r))}))});
+  }
+  for(const t of document.querySelectorAll('[role="tab"]')){const on=t.dataset.grouping===grouping;t.setAttribute("aria-selected",String(on));t.tabIndex=on?0:-1;if(on)$("audit-panel").setAttribute("aria-labelledby",t.id);}
+}
+function wireTabs(){
+  const tabs=[...document.querySelectorAll('[role="tab"]')];
+  tabs.forEach((t,i)=>{
+    t.addEventListener("click",()=>drawAudit(t.dataset.grouping));
+    t.addEventListener("keydown",e=>{
+      let j=null;if(e.key==="ArrowRight")j=(i+1)%tabs.length;else if(e.key==="ArrowLeft")j=(i-1+tabs.length)%tabs.length;else if(e.key==="Home")j=0;else if(e.key==="End")j=tabs.length-1;
+      if(j==null)return;e.preventDefault();tabs[j].focus();drawAudit(tabs[j].dataset.grouping);
+    });
+  });
+}
+
+/* ---------- Chapter 5: synthetic promotion ---------- */
+function drawSim(){
+  const groups=[["Gender","Woman","Women vs men"],["Site","Regional","Regional vs headquarters"]];
+  rangeChart($("sim-impact-chart"),{domain:[0,1.2],ticks:[0,.4,.8,1.2],tick:v=>num(v,1),refs:[{v:.8,strong:true},{v:1}],caption:"Impact ratio (line at 0.8)",
+    rows:groups.map(([g,grp,label])=>{const hi=find(A.sim_impact,r=>r.label==="Historical decisions"&&r.grouping===g&&r.group===grp),me=find(A.sim_impact,r=>r.label==="Merit-only counterfactual"&&r.grouping===g&&r.group===grp);
+      return {label,sub:`n = ${thousands(hi.n)}`,link:[hi.impact_ratio,me.impact_ratio],marks:[{est:hi.impact_ratio,lo:hi.ir_lower,hi:hi.ir_upper,color:C.accent,text:num(hi.impact_ratio,2)},{est:me.impact_ratio,lo:me.ir_lower,hi:Math.min(me.ir_upper,1.2),color:C.text,shape:"hollow",text:num(me.impact_ratio,2),below:true}],end:[pct(hi.rate,1),"promoted"]};})});
+  const terms=[["woman","Woman"],["regional","Regional site"],["part_time","Part-time"]];
+  const rows=[];
+  for(const [t,label] of terms)for(const [m,c,sub] of [["Gender visible",C.text,"gender-visible"],["Gender-blind",C.accent,"gender-blind"]]){
+    const r=A.sim_coefficients.find(x=>x.model===m&&x.term===t);
+    if(!r){rows.push({label,sub,suppressed:"gender not in this model",end:["—",""]});continue;}
+    const ex=r.lower>0||r.upper<0;
+    rows.push({label,sub,marks:[{est:r.injected,shape:"diamond",color:"var(--cp-sea)",title:"Injected truth"},{est:r.estimate,lo:r.lower,hi:r.upper,color:c,shape:ex?"":"hollow",text:num(r.estimate,2)}],end:[`truth ${num(r.injected,1)}`,""]});
+  }
+  rangeChart($("sim-coef-chart"),{domain:[-1.2,.4],ticks:[-1.2,-.8,-.4,0,.4],tick:v=>num(v,1),refs:[{v:0,strong:true}],caption:"Log-odds (below zero = penalty)",rows});
+  const src=[["Historical decisions","The recorded decisions",C.text],["Merit-only counterfactual","Penalties switched off",C.muted],["Gender visible","Gender-visible model",C.text],["Gender-blind","Gender-blind model",C.accent]];
+  rangeChart($("sim-gap-chart"),{domain:[-.15,.05],ticks:[-.15,-.1,-.05,0,.05],tick:v=>num(100*v,0),refs:[{v:0,strong:true}],caption:"Women minus men, percentage points",
+    rows:src.map(([s,label,c])=>{const r=find(A.sim_gap,x=>x.source===s);return {label,marks:[{bar:true,est:r.gap,color:c,text:num(100*r.gap,1)}],end:[`${pct(r.women_mean,1)} / ${pct(r.men_mean,1)}`,"women / men"]};})});
+}
+/* ---------- Appendix ---------- */
+const MODEL_COLOR={"Prevalence baseline":C.muted,"Bayesian logistic":C.accent,"Random forest":C.sea};
+const TERM={age_z:"Age (+1 SD)",log_fare_z:"Log fare (+1 SD)",family_size_z:"Family size (+1 SD)",age_missing:"Age missing",sex_male:"Recorded male",class_2:"Second class (vs first)",class_3:"Third class (vs first)",embarked_Q:"Embarked Queenstown",embarked_S:"Embarked Southampton"};
+let lang="Python";
+const ED=()=>DATA.languages[lang];
+function drawRates(){
+  const R=ED().bayesian_rates,get=(s,c)=>find(R,r=>r.sex===s&&Number(r.pclass)===c);
+  rangeChart($("rates"),{...PCT_TICKS,caption:"Posterior survival probability",rows:[1,2,3].map(c=>{const f=get("female",c),m=get("male",c);
+    return {label:CLASS_NAME[String(c)],sub:`${thousands(f.n)} female · ${thousands(m.n)} male`,link:[m.posterior_mean,f.posterior_mean],
+      marks:[{est:f.posterior_mean,lo:f.lower,hi:f.upper,color:C.accent,text:pct(f.posterior_mean,0)},{est:m.posterior_mean,lo:m.lower,hi:m.upper,color:C.text,text:pct(m.posterior_mean,0),below:true}]};})});
+  const f3=get("female",3),m1=get("male",1);
+  $("rate-reading").textContent=`Recorded females in third class: ${pct(f3.posterior_mean,0)} (95% CrI ${pct(f3.lower,0)}–${pct(f3.upper,0)}). Recorded males in first class: ${pct(m1.posterior_mean,0)} (${pct(m1.lower,0)}–${pct(m1.upper,0)}). Class mattered, but within the rule.`;
 }
 function drawCoefficients(){
-  const C=palette(),rows=sample().coefficients.filter(r=>r.term!=="intercept");
-  const labels={age_z:"Age / 1 SD",log_fare_z:"Log fare / 1 SD",family_size_z:"Family size / 1 SD",age_missing:"Age missing / observed",sex_male:"Male / female",class_2:"Class 2 / class 1",class_3:"Class 3 / class 1",embarked_Q:"Embarked Q / C",embarked_S:"Embarked S / C"};
-  Plotly.react("coefficients",[{
-    type:"scatter",mode:"markers",x:rows.map(r=>r.odds_ratio),y:rows.map(r=>labels[r.term]),marker:{color:C.accent,size:9},
-    error_x:{type:"data",symmetric:false,array:rows.map(r=>r.or_upper-r.odds_ratio),arrayminus:rows.map(r=>r.odds_ratio-r.or_lower),color:C["border-strong"],thickness:1.5},
-    customdata:rows.map(r=>[r.or_lower,r.or_upper]),
-    hovertemplate:"%{y}<br>Odds ratio %{x:.2f}<br>Approximate 95% credible interval %{customdata[0]:.2f}–%{customdata[1]:.2f}<extra></extra>"
-  }],{...layout(C),showlegend:false,margin:{l:150,r:24,t:20,b:55},
-    shapes:[{type:"line",x0:1,x1:1,y0:0,y1:1,xref:"x",yref:"paper",line:{color:C.border,dash:"dot"}}],
-    xaxis:{type:"log",title:{text:"Conditional odds ratio"},gridcolor:C.border},
-    yaxis:{autorange:"reversed",gridcolor:C.border}},config);
+  const rows=ED().coefficients.filter(r=>r.term!=="intercept");
+  const lo=Math.min(...rows.map(r=>r.or_lower)),hi=Math.max(...rows.map(r=>r.or_upper));
+  const cand=[.02,.05,.1,.2,.5,1,2,5,10,20],a=[...cand].reverse().find(v=>v<=lo)??cand[0],b=cand.find(v=>v>=hi)??cand[cand.length-1];
+  rangeChart($("coefficients"),{scale:"log",domain:[a,b],ticks:cand.filter(v=>v>=a&&v<=b),tick:v=>String(v),refs:[{v:1,strong:true}],caption:"Odds ratio (log scale; 1 = no association)",
+    rows:rows.map(r=>({label:TERM[r.term]||r.term,marks:[{est:r.odds_ratio,lo:r.or_lower,hi:r.or_upper,color:r.or_upper<1||r.or_lower>1?C.accent:C.text,text:num(r.odds_ratio,2)}]}))});
 }
-function render(){drawRates();drawRules();scoreTable();drawPredictions();drawCoefficients();}
-$("language").addEventListener("change",render);
-for(const id of ["support","confidence","lift"])$(id).addEventListener("input",drawRules);
-$("rule-select").addEventListener("change",ruleDetail);
-$("theme").addEventListener("click",()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==="dark"?"light":"dark";render();});
-render();
-$("rule-scatter").on("plotly_click",event=>{if(event.points[0]){$("rule-select").value=String(event.points[0].pointIndex);ruleDetail();$("rule-select").focus();}});
+function drawScores(){
+  const M=ED().metrics,models=[...new Set(M.map(r=>r.model))],body=$("scores");body.replaceChildren();
+  for(const m of models){
+    const cv=M.filter(r=>r.phase==="cv"&&r.model===m).map(r=>r.roc_auc),t=find(M,r=>r.phase==="test"&&r.model===m);
+    const mean=cv.reduce((s,v)=>s+v,0)/cv.length,sd=Math.sqrt(cv.reduce((s,v)=>s+(v-mean)**2,0)/(cv.length-1));
+    const tr=h("tr"),th=h("th","",m);tr.dataset.model=m;th.scope="row";tr.append(th);
+    for(const v of [`${num(mean,3)} ± ${num(sd,3)}`,num(t.roc_auc,3),num(t.brier,3),num(t.log_loss,3),num(t.balanced_accuracy,3)])tr.append(h("td","",v));
+    body.append(tr);
+  }
+  const n=find(M,r=>r.phase==="test").n;
+  $("model-language").textContent=`${lang} implementation · holdout n = ${thousands(n)}`;
+  const leg=$("model-legend");leg.replaceChildren();
+  for(const m of models){const li=h("li"),k=h("span","key");li.dataset.model=m;k.style.setProperty("--c",MODEL_COLOR[m]||C.text);li.append(k,m);leg.append(li);}
+}
+function highlightModel(){
+  const selected=$("model-focus").value;
+  for(const el of document.querySelectorAll("#scores [data-model], #roc [data-model], #calibration [data-model], #model-legend [data-model]")){
+    const focused=!!selected&&el.dataset.model===selected;
+    el.classList.toggle("is-focused",focused);
+    el.classList.toggle("is-context",!!selected&&!focused);
+    for(const point of el.querySelectorAll("circle"))point.setAttribute("r",focused?"1.7":"1.3");
+  }
+  $("model-focus-status").textContent=(selected?`${selected} highlighted; all other models remain visible for comparison.`:"All models shown.")+" AUC measures ranking; Brier score and log loss measure probability quality. Highlighting does not select a winner.";
+}
+function axes(svg){
+  for(const v of [0,.25,.5,.75,1]){s("line",{class:"grid",x1:v*100,x2:v*100,y1:0,y2:100},svg);s("line",{class:"grid",x1:0,x2:100,y1:100-v*100,y2:100-v*100},svg);
+    s("text",{x:v*100,y:106,"text-anchor":"middle"},svg).textContent=String(v);s("text",{x:-2,y:101-v*100,"text-anchor":"end"},svg).textContent=String(v);}
+  s("path",{class:"diag",d:"M0 100L100 0"},svg);
+}
+function drawRoc(){
+  const svg=$("roc");svg.replaceChildren();axes(svg);const P=ED().predictions;
+  for(const m of [...new Set(P.map(r=>r.model))]){
+    const group=s("g",{class:"model-series","data-model":m},svg);
+    const rows=P.filter(r=>r.model===m).sort((a,b)=>b.probability-a.probability),pos=rows.filter(r=>r.Survived===1).length,neg=rows.length-pos;
+    let tp=0,fp=0,pts=[[0,0]];
+    for(let i=0;i<rows.length;i++){rows[i].Survived===1?tp++:fp++;if(i===rows.length-1||rows[i+1].probability!==rows[i].probability)pts.push([fp/neg,tp/pos]);}
+    s("path",{class:"curve",stroke:MODEL_COLOR[m]||C.text,d:"M"+pts.map(([x,y])=>`${(100*x).toFixed(2)} ${(100-100*y).toFixed(2)}`).join("L")},group);
+  }
+  s("text",{x:50,y:113,"text-anchor":"middle"},svg).textContent="False-positive rate";
+}
+function drawCalibration(){
+  const svg=$("calibration");svg.replaceChildren();axes(svg);const Cb=ED().calibration;
+  for(const m of [...new Set(Cb.map(r=>r.model))]){
+    const group=s("g",{class:"model-series","data-model":m},svg);
+    const pts=Cb.filter(r=>r.model===m&&r.n>0&&r.predicted!=null);
+    s("path",{class:"curve",stroke:MODEL_COLOR[m]||C.text,d:"M"+pts.map(r=>`${(100*r.predicted).toFixed(2)} ${(100-100*r.observed).toFixed(2)}`).join("L")},group);
+    for(const r of pts){const c=s("circle",{cx:100*r.predicted,cy:100-100*r.observed,r:1.3,fill:MODEL_COLOR[m]||C.text},group);s("title",{},c).textContent=`${m}, bin ${r.bin}: predicted ${pct(r.predicted)}, observed ${pct(r.observed)}, n = ${r.n}`;}
+  }
+  s("text",{x:50,y:113,"text-anchor":"middle"},svg).textContent="Mean predicted probability";
+}
+const ruleKey=r=>JSON.stringify([r.antecedent,r.consequent]);
+function drawRuleEvidence(){
+  const r=ED().rules.find(r=>ruleKey(r)===$("rule-select").value);
+  if(!r)return;
+  const outcome=r.consequent.replace("Outcome=","");
+  rangeChart($("rule-evidence-chart"),{...PCT_TICKS,caption:`Observed frequency: ${outcome.toLowerCase()}`,rows:[
+    {label:"All training records",sub:"Outcome baseline",marks:[{bar:true,est:r.baseline,color:C.text,text:pct(r.baseline)}],end:[`${thousands(r.consequent_count)} of ${thousands(r.N)}`,outcome]},
+    {label:"Matching records",sub:"Rule confidence",marks:[{bar:true,est:r.confidence,color:C.accent,text:pct(r.confidence)}],end:[`${thousands(r.count)} of ${thousands(r.antecedent_count)}`,outcome]}
+  ]});
+  $("rule-evidence-reading").textContent=`${thousands(r.antecedent_count)} training records match these attributes; ${thousands(r.count)} have the outcome “${outcome}”. Lift = ${num(r.lift,2)}× the training baseline (${pct(r.baseline)}). This is an association, not an intervention effect.`;
+  for(const tr of $("rules-body").children)tr.classList.toggle("is-focused",tr.dataset.rule===ruleKey(r));
+}
+function drawRules(){
+  const conf=Number($("confidence").value),lift=Number($("lift").value);
+  $("confidence-value").textContent=conf+"%";$("lift-value").textContent=lift.toFixed(1)+"×";
+  const R=ED().rules,keep=R.filter(r=>r.confidence*100>=conf-1e-9&&r.lift>=lift-1e-9).sort((a,b)=>b.lift-a.lift);
+  const top=keep.slice(0,12),body=$("rules-body"),sel=$("rule-select"),previous=sel.value;body.replaceChildren();sel.replaceChildren();
+  for(const r of keep){const o=h("option","",`${r.antecedent} → ${r.consequent.replace("Outcome=","")}`);o.value=ruleKey(r);sel.append(o);}
+  if(keep.some(r=>ruleKey(r)===previous))sel.value=previous;
+  sel.disabled=keep.length===0;$("rule-evidence").hidden=keep.length===0;
+  if(!keep.length){$("rule-evidence-chart").replaceChildren();$("rule-evidence-reading").textContent="";}
+  for(const r of top){const tr=h("tr"),th=h("th","",`${r.antecedent} → ${r.consequent.replace("Outcome=","")}`);tr.dataset.rule=ruleKey(r);th.scope="row";tr.append(th);
+    for(const v of [pct(r.support),pct(r.confidence),pct(r.baseline),num(r.lift,2)+"×",thousands(r.count)])tr.append(h("td","",v));body.append(tr);}
+  $("rule-status").textContent=`${keep.length} of ${R.length} rules meet these filters${keep.length>12?"; the table shows the 12 with the highest lift; the selector includes all matching rules":""}. Training rows N = ${thousands(R[0].N)}.`;
+  $("rule-empty").hidden=keep.length>0;$("rule-results").hidden=keep.length===0;
+  drawRuleEvidence();
+}
+function drawAppendix(){drawRates();drawCoefficients();drawScores();drawRoc();drawCalibration();highlightModel();drawRules();}
+function wireLanguage(){
+  const sel=$("language");
+  for(const l of ["Python","R"]){const o=h("option","",DATA.languages[l]?`${l} edition`:`${l} (outputs refreshing)`);o.value=l;o.disabled=!DATA.languages[l];sel.append(o);}
+  sel.value=lang;
+  const note=()=>{$("language-note").textContent=DATA.language_notes[lang]||(lang==="Python"?"Reference outputs for every chapter.":"Appendix tables from the R edition; chapters 1–5 use the Python reference outputs.");};
+  note();
+  sel.addEventListener("change",()=>{lang=sel.value;note();drawAppendix();});
+}
+
+/* ---------- Behaviour ---------- */
+function wireTheme(){
+  const btn=$("theme"),root=document.documentElement;
+  const apply=t=>{root.dataset.theme=t;btn.setAttribute("aria-pressed",String(t==="dark"));};
+  apply(root.dataset.theme==="dark"?"dark":"light");
+  btn.addEventListener("click",()=>apply(root.dataset.theme==="dark"?"light":"dark"));
+}
+function wireReveal(){
+  if(!MOTION||!("IntersectionObserver" in window))return;
+  document.documentElement.classList.add("js-reveal");
+  const seats=$("seats");seats.classList.add("seats-anim");
+  const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}},{rootMargin:"0px 0px -8% 0px"});
+  for(const el of document.querySelectorAll(".reveal"))io.observe(el);
+  io.observe(seats);
+}
+
+bindFacts();drawPolicy();drawChildren();drawSeats();drawDeck();drawMissing();
+drawModel("roc_auc");drawProxy();wireTabs();drawAudit("Sex");drawSim();
+wireLanguage();drawAppendix();wireTheme();wireReveal();
+for(const r of document.querySelectorAll('input[name="cutoff"]'))r.addEventListener("change",drawChildren);
+for(const b of document.querySelectorAll("[data-metric]"))b.addEventListener("click",()=>drawModel(b.dataset.metric));
+for(const id of ["confidence","lift"])$(id).addEventListener("input",drawRules);
+$("rule-select").addEventListener("change",drawRuleEvidence);
+$("model-focus").addEventListener("change",highlightModel);
 </script>
 </body>
 </html>

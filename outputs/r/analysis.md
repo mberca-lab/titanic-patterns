@@ -26,7 +26,7 @@ coefficients <- read.csv(file.path(out, "coefficients.csv"))
 
 ## 1. A selected historical sample, not a complete manifest
 
-The analysis uses **891 labeled passenger records** from the pinned,
+The analysis uses **1309 labeled passenger records** from the pinned,
 CC0-declared public source described in the root documentation. They are not
 the entire Titanic manifest or a random sample of a modern population.
 Names, ticket strings, and cabins are not predictors or rule items. Group
@@ -47,31 +47,36 @@ knitr::kable(data.frame(
 
 Table: The split is committed once and shared by both languages.
 
-|subset        |   n| survived|
-|:-------------|---:|--------:|
-|Training      | 712|      273|
-|Held-out test | 179|       69|
+|subset        |    n| survived|
+|:-------------|----:|--------:|
+|Training      | 1048|      400|
+|Held-out test |  261|      100|
 
 ``` r
 knitr::kable(read.csv(file.path(out, "missingness.csv")), digits = 3,
-             caption = "Missing fractions refer to all 891 labeled records.")
+             caption = paste("Missing fractions refer to all", nrow(d), "labeled records."))
 ```
 
 
 
-Table: Missing fractions refer to all 891 labeled records.
+Table: Missing fractions refer to all 1309 labeled records.
 
-|field       | n_missing| pct_missing|
-|:-----------|---------:|-----------:|
-|PassengerId |         0|       0.000|
-|Survived    |         0|       0.000|
-|Pclass      |         0|       0.000|
-|Sex         |         0|       0.000|
-|Age         |       177|       0.199|
-|SibSp       |         0|       0.000|
-|Parch       |         0|       0.000|
-|Fare        |         0|       0.000|
-|Embarked    |         2|       0.002|
+|field         | n_missing| pct_missing|
+|:-------------|---------:|-----------:|
+|PassengerId   |         0|       0.000|
+|Survived      |         0|       0.000|
+|Pclass        |         0|       0.000|
+|Sex           |         0|       0.000|
+|Age           |       263|       0.201|
+|SibSp         |         0|       0.000|
+|Parch         |         0|       0.000|
+|Fare          |         1|       0.001|
+|TicketSize    |         0|       0.000|
+|FarePerPerson |         1|       0.001|
+|Embarked      |         2|       0.002|
+|Title         |         0|       0.000|
+|BoatSide      |         0|       0.000|
+|InKaggleTrain |         0|       0.000|
 
 ![Sample overview](overview.png)
 
@@ -86,12 +91,13 @@ The three prespecified models are a training-prevalence baseline, a
 500-tree random forest (`mtry=3`, `nodesize=5`), and regularized Bayesian
 logistic regression. The seed is `20261014`. Each of five training validation
 folds refits its own medians, embarkation mode, and sample-standard-deviation
-scales. The final models fit on all 712 training rows and transform the same
-179 test rows without refitting preprocessing.
+scales. The final models fit on all 1048 training rows and transform the same
+261 test rows without refitting preprocessing.
 
-The ordered inputs are age_z, log_fare_z, family_size_z, age_missing, sex_male, class_2, class_3, embarked_Q, embarked_S. Age and fare
+The ordered inputs are age_z, log_fare_z, family_size_z, age_missing, sex_male, class_2, class_3, embarked_Q, embarked_S. Age and fare per
+person (`FarePerPerson`, the ticket fare divided by the ticket's group size)
 use training medians; missing embarkation uses the alphabetical-first training
-mode in a tie. Fare is transformed with `log1p`; family size is
+mode in a tie. Fare per person is transformed with `log1p`; family size is
 `SibSp + Parch + 1`. Numeric covariates are centered and scaled with training
 sample SD; zero SD is replaced by one.
 
@@ -110,9 +116,9 @@ Table: Unweighted mean of the five validation-fold scores (development only).
 
 |model               | roc_auc|  brier| log_loss| balanced_accuracy|
 |:-------------------|-------:|------:|--------:|-----------------:|
-|Bayesian logistic   |  0.8459| 0.1468|   0.4605|            0.7720|
-|Prevalence baseline |  0.5000| 0.2364|   0.6657|            0.5000|
-|Random forest       |  0.8482| 0.1456|   0.5827|            0.7808|
+|Bayesian logistic   |  0.8293| 0.1545|   0.4814|            0.7641|
+|Prevalence baseline |  0.5000| 0.2360|   0.6649|            0.5000|
+|Random forest       |  0.8364| 0.1545|   0.6425|            0.7517|
 
 These means describe the particular committed folds, not five independent
 experiments or a confidence interval. No hyperparameters are selected from
@@ -132,15 +138,15 @@ Table: Held-out performance, reported once without test-driven tuning.
 
 |   |model               | roc_auc|  brier| log_loss| balanced_accuracy|   n|
 |:--|:-------------------|-------:|------:|--------:|-----------------:|---:|
-|16 |Prevalence baseline |  0.5000| 0.2369|   0.6667|            0.5000| 179|
-|17 |Random forest       |  0.8939| 0.1124|   0.4101|            0.8214| 179|
-|18 |Bayesian logistic   |  0.8796| 0.1356|   0.4224|            0.7724| 179|
+|16 |Prevalence baseline |  0.5000| 0.2363|   0.6656|            0.5000| 261|
+|17 |Random forest       |  0.8686| 0.1329|   0.6907|            0.8084| 261|
+|18 |Bayesian logistic   |  0.8659| 0.1310|   0.4197|            0.7917| 261|
 
 In this particular holdout, the forest's Brier score is
-**0.112**,
-compared with **0.237**
+**0.133**,
+compared with **0.236**
 for the constant baseline and
-**0.136**
+**0.131**
 for the Bayesian plug-in model. Thus, the modeled historical characteristics
 carry predictive information in this partition; that finding does not explain
 survival mechanisms or certify performance on another population.
@@ -156,7 +162,7 @@ and a fixed direction; no automatic direction selection is permitted.
 
 ![Reliability and bin counts](calibration.png)
 
-The test set contains only 179 records. Scores and small-bin reliability
+The test set contains only 261 records. Scores and small-bin reliability
 estimates can move with another sample or grouped partition. These figures
 do not establish a statistically significant gain or a universally best
 algorithm. R and Python forests need not agree: their fitting algorithms
@@ -183,16 +189,16 @@ Table: Posterior modes and approximate marginal 95% credible intervals.
 
 |term          | estimate|     sd|   lower|   upper| odds_ratio| or_lower| or_upper| prior_sd|
 |:-------------|--------:|------:|-------:|-------:|----------:|--------:|--------:|--------:|
-|intercept     |   2.1074| 0.3912|  1.3406|  2.8742|     8.2267|   3.8212|  17.7112|      5.0|
-|age_z         |  -0.4522| 0.1124| -0.6725| -0.2318|     0.6363|   0.5104|   0.7931|      2.5|
-|log_fare_z    |   0.4992| 0.1850|  0.1365|  0.8619|     1.6474|   1.1463|   2.3675|      2.5|
-|family_size_z |  -0.5270| 0.1446| -0.8104| -0.2436|     0.5904|   0.4447|   0.7838|      2.5|
-|age_missing   |  -0.1846| 0.2717| -0.7171|  0.3478|     0.8314|   0.4882|   1.4160|      2.5|
-|sex_male      |  -2.6085| 0.2189| -3.0375| -2.1795|     0.0736|   0.0480|   0.1131|      2.5|
-|class_2       |  -0.6258| 0.3590| -1.3294|  0.0778|     0.5348|   0.2646|   1.0809|      2.5|
-|class_3       |  -1.4176| 0.3853| -2.1727| -0.6624|     0.2423|   0.1139|   0.5156|      2.5|
-|embarked_Q    |  -0.0412| 0.4146| -0.8539|  0.7714|     0.9596|   0.4258|   2.1628|      2.5|
-|embarked_S    |  -0.1175| 0.2666| -0.6399|  0.4049|     0.8891|   0.5273|   1.4992|      2.5|
+|intercept     |   2.6349| 0.3095|  2.0283|  3.2416|    13.9424|   7.6011|  25.5740|      5.0|
+|age_z         |  -0.4265| 0.0901| -0.6031| -0.2500|     0.6528|   0.5471|   0.7788|      2.5|
+|log_fare_z    |   0.0297| 0.1297| -0.2246|  0.2840|     1.0302|   0.7989|   1.3285|      2.5|
+|family_size_z |  -0.2410| 0.0889| -0.4152| -0.0669|     0.7858|   0.6602|   0.9353|      2.5|
+|age_missing   |  -0.3040| 0.2245| -0.7441|  0.1360|     0.7378|   0.4752|   1.1457|      2.5|
+|sex_male      |  -2.5828| 0.1763| -2.9283| -2.2372|     0.0756|   0.0535|   0.1068|      2.5|
+|class_2       |  -0.8790| 0.2847| -1.4369| -0.3210|     0.4152|   0.2377|   0.7254|      2.5|
+|class_3       |  -1.7809| 0.3215| -2.4111| -1.1507|     0.1685|   0.0897|   0.3164|      2.5|
+|embarked_Q    |  -0.2815| 0.3378| -0.9436|  0.3806|     0.7547|   0.3892|   1.4632|      2.5|
+|embarked_S    |  -0.5244| 0.2083| -0.9326| -0.1161|     0.5919|   0.3935|   0.8904|      2.5|
 
 ![Approximate Bayesian associations](bayesian_effects.png)
 
@@ -208,9 +214,9 @@ This is neither MCMC nor an exact posterior analysis.
 
 ## 4. Exploratory association rules: count first, then interpret
 
-Only the 712 training records are transactions. Survival is confined to
+Only the 1048 training records are transactions. Survival is confined to
 one consequent item, never an antecedent. Antecedents use at most two items
-from recorded sex, class, raw age category, family category, or raw fare
+from recorded sex, class, raw age category, family category, or raw fare-per-person
 category. Missing ages/fares become `Unknown`, not imputed values. The
 fixed filters are support at least 0.04, confidence at least 0.60,
 joint count at least 20, lift at least 1.0, and total rule length 2–3.
@@ -223,28 +229,28 @@ knitr::kable(head(rules, 10), digits = 3,
 
 
 
-Table: 46 retained exploratory rules; complete export in rules.csv.
+Table: 45 retained exploratory rules; complete export in rules.csv.
 
-|antecedent                     |consequent       | support| confidence|  lift| count| antecedent_count| consequent_count| baseline|   N|
-|:------------------------------|:----------------|-------:|----------:|-----:|-----:|----------------:|----------------:|--------:|---:|
-|Class=1 & Sex=female           |Outcome=Survived |   0.103|      0.961| 2.505|    73|               76|              273|    0.383| 712|
-|Class=2 & Sex=female           |Outcome=Survived |   0.074|      0.930| 2.425|    53|               57|              273|    0.383| 712|
-|Fare=High (>30) & Sex=female   |Outcome=Survived |   0.105|      0.904| 2.357|    75|               83|              273|    0.383| 712|
-|Age=Child (<16) & Family=2-4   |Outcome=Survived |   0.048|      0.872| 2.274|    34|               39|              273|    0.383| 712|
-|Family=2-4 & Sex=female        |Outcome=Survived |   0.139|      0.798| 2.082|    99|              124|              273|    0.383| 712|
-|Family=Alone & Sex=female      |Outcome=Survived |   0.114|      0.771| 2.012|    81|              105|              273|    0.383| 712|
-|Age=Adult (16-59) & Sex=female |Outcome=Survived |   0.181|      0.768| 2.003|   129|              168|              273|    0.383| 712|
-|Sex=female                     |Outcome=Survived |   0.260|      0.740| 1.930|   185|              250|              273|    0.383| 712|
-|Class=1 & Family=2-4           |Outcome=Survived |   0.087|      0.721| 1.880|    62|               86|              273|    0.383| 712|
-|Class=1 & Fare=High (>30)      |Outcome=Survived |   0.131|      0.699| 1.824|    93|              133|              273|    0.383| 712|
+|antecedent                       |consequent       | support| confidence|  lift| count| antecedent_count| consequent_count| baseline|    N|
+|:--------------------------------|:----------------|-------:|----------:|-----:|-----:|----------------:|----------------:|--------:|----:|
+|Fare=High (>30) & Sex=female     |Outcome=Survived |   0.047|      0.961| 2.517|    49|               51|              400|    0.382| 1048|
+|Class=1 & Sex=female             |Outcome=Survived |   0.097|      0.953| 2.498|   102|              107|              400|    0.382| 1048|
+|Fare=Middle (10-30) & Sex=female |Outcome=Survived |   0.104|      0.886| 2.322|   109|              123|              400|    0.382| 1048|
+|Class=2 & Sex=female             |Outcome=Survived |   0.076|      0.879| 2.303|    80|               91|              400|    0.382| 1048|
+|Age=Child (<16) & Family=2-4     |Outcome=Survived |   0.046|      0.787| 2.062|    48|               61|              400|    0.382| 1048|
+|Family=2-4 & Sex=female          |Outcome=Survived |   0.139|      0.777| 2.035|   146|              188|              400|    0.382| 1048|
+|Age=Adult (16-59) & Sex=female   |Outcome=Survived |   0.180|      0.762| 1.997|   189|              248|              400|    0.382| 1048|
+|Family=Alone & Sex=female        |Outcome=Survived |   0.105|      0.753| 1.974|   110|              146|              400|    0.382| 1048|
+|Sex=female                       |Outcome=Survived |   0.255|      0.730| 1.911|   267|              366|              400|    0.382| 1048|
+|Class=1 & Family=2-4             |Outcome=Survived |   0.080|      0.700| 1.834|    84|              120|              400|    0.382| 1048|
 
-The leading retained pattern is **Class=1 & Sex=female**
+The leading retained pattern is **Fare=High (>30) & Sex=female**
 with consequent **Outcome=Survived**. It covers
-**73 joint records** among **76**
+**49 joint records** among **51**
 matching antecedents, rather than a large lift derived from a hidden tiny
 denominator. Its confidence is **96.1%**,
 compared with a consequent baseline of
-**38.3%** in training.
+**38.2%** in training.
 
 ![Training-only rules](rules.png)
 
@@ -257,7 +263,7 @@ training-only exhibits are not validated predictions or causal discoveries.
 
 ## 5. A separate Bayesian question: describe sex-by-class rates
 
-For this section **all 891 labeled records** describe six historical strata.
+For this section **all 1309 labeled records** describe six historical strata.
 A Beta(1,1) prior and `s` survivors among `n` records yield
 Beta(`s+1`, `n-s+1`). The table reports the exact conjugate posterior mean
 and central 95% beta credible interval. This separate descriptive
@@ -276,18 +282,94 @@ Table: Full-sample descriptive posterior; group counts remain visible.
 
 |sex    | pclass|   n| survived| observed_rate| posterior_mean|  lower|  upper| prior_alpha| prior_beta|
 |:------|------:|---:|--------:|-------------:|--------------:|------:|------:|-----------:|----------:|
-|female |      1|  94|       91|        0.9681|         0.9583| 0.9105| 0.9884|           1|          1|
-|male   |      1| 122|       45|        0.3689|         0.3710| 0.2884| 0.4575|           1|          1|
-|female |      2|  76|       70|        0.9211|         0.9103| 0.8381| 0.9627|           1|          1|
-|male   |      2| 108|       17|        0.1574|         0.1636| 0.1009| 0.2379|           1|          1|
-|female |      3| 144|       72|        0.5000|         0.5000| 0.4193| 0.5807|           1|          1|
-|male   |      3| 347|       47|        0.1354|         0.1375| 0.1035| 0.1755|           1|          1|
+|female |      1| 144|      139|        0.9653|         0.9589| 0.9214| 0.9847|           1|          1|
+|male   |      1| 179|       61|        0.3408|         0.3425| 0.2753| 0.4130|           1|          1|
+|female |      2| 106|       94|        0.8868|         0.8796| 0.8123| 0.9337|           1|          1|
+|male   |      2| 171|       25|        0.1462|         0.1503| 0.1012| 0.2070|           1|          1|
+|female |      3| 216|      106|        0.4907|         0.4908| 0.4248| 0.5571|           1|          1|
+|male   |      3| 493|       75|        0.1521|         0.1535| 0.1232| 0.1866|           1|          1|
 
 ![Descriptive Bayesian rates](bayesian_rates.png)
 
 Large differences in these observed records do not identify mechanisms.
 The posterior intervals are conditional on the binomial model and prior,
 not a correction for missing records, selection, dependence, or confounding.
+
+## 6. Audit: what a model learns from historical decisions
+
+`R/audit.R` mirrors `Python/audit.py`. Five Laplace-approximated Bayesian
+logistic specifications (policy terms, structural terms, both, sex-blind, and
+sex-blind plus title), a prevalence baseline, and a 300-tree random forest are
+refitted inside each of the 20 x 5 committed grouped folds in
+`data/repeated_cv.csv`. Differences from the reference *Policy + structure*
+model use Nadeau-Bengio corrected resampled t intervals.
+
+
+``` r
+comparison <- read.csv(file.path(out, "model_comparison.csv"))
+knitr::kable(comparison[comparison$metric == "roc_auc",
+                        c("model", "mean_model", "mean_difference", "lower", "upper")],
+             digits = 4, caption = "Repeated grouped CV AUC differences vs Policy + structure.")
+```
+
+
+
+Table: Repeated grouped CV AUC differences vs Policy + structure.
+
+|   |model               | mean_model| mean_difference|   lower|   upper|
+|:--|:-------------------|----------:|---------------:|-------:|-------:|
+|3  |Prevalence baseline |     0.5000|         -0.3552| -0.3817| -0.3287|
+|6  |Policy only         |     0.7910|         -0.0641| -0.0803| -0.0480|
+|9  |Structure only      |     0.6912|         -0.1640| -0.1988| -0.1291|
+|12 |Policy + structure  |     0.8552|          0.0000|  0.0000|  0.0000|
+|15 |Sex-blind           |     0.7058|         -0.1494| -0.1803| -0.1186|
+|18 |Sex-blind + title   |     0.8466|         -0.0086| -0.0198|  0.0027|
+|21 |Random forest       |     0.8489|         -0.0063| -0.0207|  0.0081|
+
+``` r
+knitr::kable(read.csv(file.path(out, "proxy_gap.csv")), digits = 3,
+             caption = "How much of the observed female-male gap each model reproduces out of fold.")
+```
+
+
+
+Table: How much of the observed female-male gap each model reproduces out of fold.
+
+|source             | female_mean| male_mean|   gap| share_of_observed_gap|
+|:------------------|-----------:|---------:|-----:|---------------------:|
+|Observed outcomes  |       0.727|     0.191| 0.536|                 1.000|
+|Policy + structure |       0.725|     0.191| 0.533|                 0.994|
+|Sex-blind          |       0.429|     0.356| 0.073|                 0.136|
+|Sex-blind + title  |       0.720|     0.195| 0.525|                 0.979|
+
+``` r
+fairness <- read.csv(file.path(out, "fairness_audit.csv"))
+knitr::kable(fairness[c("grouping", "group", "n", "base_rate", "selection_rate",
+                        "impact_ratio", "tpr", "fpr", "ppv")], digits = 3,
+             caption = "Group audit at threshold 0.5; rates with denominators below 20 are suppressed.")
+```
+
+
+
+Table: Group audit at threshold 0.5; rates with denominators below 20 are suppressed.
+
+|grouping    |group            |   n| base_rate| selection_rate| impact_ratio|   tpr|   fpr|   ppv|
+|:-----------|:----------------|---:|---------:|--------------:|------------:|-----:|-----:|-----:|
+|Sex         |Female           | 466|     0.727|          0.809|        1.000| 0.900| 0.567| 0.809|
+|Sex         |Male             | 843|     0.191|          0.028|        0.035| 0.124| 0.006| 0.833|
+|Class       |Class 1          | 323|     0.619|          0.461|        1.000| 0.720| 0.041| 0.966|
+|Class       |Class 2          | 277|     0.430|          0.426|        0.923| 0.882| 0.082| 0.890|
+|Class       |Class 3          | 709|     0.255|          0.189|        0.410| 0.420| 0.110| 0.567|
+|Sex x class |Female / class 1 | 144|     0.965|          1.000|        1.000| 1.000|    NA| 0.965|
+|Sex x class |Female / class 2 | 106|     0.887|          1.000|        1.000| 1.000|    NA| 0.887|
+|Sex x class |Female / class 3 | 216|     0.491|          0.588|        0.588| 0.679| 0.500| 0.567|
+|Sex x class |Male / class 1   | 179|     0.341|          0.028|        0.028| 0.082| 0.000|    NA|
+|Sex x class |Male / class 2   | 171|     0.146|          0.070|        0.070| 0.440| 0.007|    NA|
+|Sex x class |Male / class 3   | 493|     0.152|          0.014|        0.014| 0.053| 0.007|    NA|
+
+Removing recorded sex does not remove its signal when title (or other
+proxies) remain. The synthetic promotion example (`sim_*.csv`) shows a model
+recovering an injected gender penalty; it contains no real employees.
 
 ## Reproduce and inspect
 
@@ -304,12 +386,12 @@ sessionInfo()
 ```
 
 ```
-## R version 4.4.3 (2025-02-28 ucrt)
+## R version 4.6.2 (2026-10-29 ucrt)
 ## Platform: x86_64-w64-mingw32/x64
 ## Running under: Windows 11 x64 (build 26310)
 ## 
 ## Matrix products: default
-## 
+##   LAPACK version 3.12.1
 ## 
 ## locale:
 ## [1] LC_COLLATE=English_Ireland.utf8  LC_CTYPE=English_Ireland.utf8   
@@ -323,5 +405,6 @@ sessionInfo()
 ## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## loaded via a namespace (and not attached):
-## [1] compiler_4.4.3 tools_4.4.3    knitr_1.47     xfun_0.44      evaluate_0.23
+## [1] compiler_4.6.2 cli_3.6.6      tools_4.6.2    otel_0.2.0     knitr_1.52    
+## [6] xfun_0.62      rlang_1.3.0    evaluate_1.0.5
 ```

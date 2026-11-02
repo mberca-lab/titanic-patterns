@@ -1,47 +1,72 @@
 # Public historical data
 
-The source is `titanic_train` from Paul Hendricks' **titanic** R package,
-whose pinned [`DESCRIPTION`](https://github.com/paulhendricks/titanic/blob/53be2fd391100044594de004d559858077a10c43/DESCRIPTION)
-declares **CC0**. It packages the labeled training sample used in the
-[Kaggle Titanic competition](https://www.kaggle.com/competitions/titanic).
+## titanic3
 
-The analysis uses **891 labeled passenger records**, not the complete passenger
-and crew manifest. These are real historical observations, not synthetic data
-and not a representative sample of a modern population.
+- **Source:** `titanic3` from the [Vanderbilt Department of Biostatistics data
+  repository](https://hbiostat.org/data/repo/titanic.html), compiled by Thomas
+  Cason from Encyclopedia Titanica.
+- **Records:** 1,309 passengers; crew are not included.
+- **Survivors:** 500.
+
+> Data obtained from http://hbiostat.org/data courtesy of the Vanderbilt
+> University Department of Biostatistics.
+
+The hbiostat terms state: "Permission is granted to anyone wishing to use the
+data sets provided here." Upstream Encyclopedia Titanica content is not
+necessarily public domain. For that reason, names, tickets, cabins, boat
+numbers, body numbers and home/destination text are **dropped at ingest** and
+never committed.
+
+The 891-row Kaggle training sample (Paul Hendricks' CC0 `titanic` package) is
+kept as a **regression test**. Every Kaggle row matches titanic3 exactly on
+survival, sex and class, and `InKaggleTrain` flags those rows.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| [`passengers.csv`](passengers.csv) | Minimal shared input for R and Python |
-| [`split.csv`](split.csv) | Frozen training/test membership and inner validation folds |
-| [`provenance.json`](provenance.json) | Source URL, immutable revision, SHA-256 checksum, scope, and split counts |
+| [`passengers.csv`](passengers.csv) | Minimal shared input for R and Python (1,309 rows) |
+| [`split.csv`](split.csv) | Ticket-grouped holdout (1,048 train / 261 test) and inner folds 0–4 |
+| [`repeated_cv.csv`](repeated_cv.csv) | 20 repeats × 5 ticket-grouped folds over all rows |
+| [`synthetic_promotions.csv`](synthetic_promotions.csv) | **Synthetic** 5,000-employee promotion data with a known, injected bias |
+| [`synthetic_truth.json`](synthetic_truth.json) | The injected log-odds and the generating process |
+| [`provenance.json`](provenance.json) | Source URLs, SHA-256 checksums, terms, credit, excluded fields and derived columns |
 
-`passengers.csv` includes `PassengerId`, `Survived` (1 means survived),
-`Pclass` (1/2/3), `Sex` (source labels female/male), `Age`, `SibSp`, `Parch`,
-`Fare`, and `Embarked` (C/Q/S). Missing age and embarkation values are retained.
-`PassengerId` is only a join key, never a model feature.
+### Columns in `passengers.csv`
 
-Raw passenger names, ticket strings, and cabin strings are **not committed**.
-The preparation script uses shared tickets only to create group identifiers,
-then discards the original strings. These groups do not perfectly identify
-families or other social relationships.
+| Column | Meaning |
+|---|---|
+| `PassengerId` | Join key only |
+| `Survived` | 1 = survived |
+| `Pclass` | Passenger class: 1, 2 or 3 |
+| `Sex` | Source labels, female or male |
+| `Age` | Missing values retained |
+| `SibSp`, `Parch` | Siblings/spouses and parents/children aboard |
+| `Fare` | Recorded per ticket |
+| `TicketSize` | Rows sharing the ticket |
+| `FarePerPerson` | `Fare / TicketSize` |
+| `Embarked` | C, Q or S; missing values retained |
+| `Title` | Mr, Mrs, Miss, Master or Rare. The name itself is discarded |
+| `BoatSide` | Starboard, Port, Unknown or None recorded; descriptive only |
+| `InKaggleTrain` | 1 if the row is in the Kaggle sample |
 
-The shared split has **712 training rows and 179 held-out test rows**.
-Training records have validation folds 0–4; held-out records have fold -1.
-The same ticket group never spans the test boundary or two validation folds.
-Neither group identifiers nor fold membership are predictors.
+Ticket strings are used once, to build invented group identifiers, and are then
+discarded. Groups do not perfectly identify families. Neither group IDs nor
+folds are predictors.
 
-## Recreate the extract
+The synthetic promotion data are **not real employees**. They exist so that the
+audit can be checked against a known truth.
 
-With the Python dependencies installed, run from the repository root:
+## Recreate the data
+
+From the repository root:
 
 ```powershell
-python scripts/prepare_data.py
+.\.venv\Scripts\python.exe scripts\prepare_data.py
 ```
 
-The source revision and expected checksum are pinned. This is the only step
-requiring a download. Normal R/Python analysis runs use the committed extract
-without internet access or a Kaggle account.
+This is the only step that downloads anything. Both sources are pinned by
+checksum, and the script fails if either file changes or the Kaggle regression
+breaks.
 
 Read the [analysis contract](../METHODOLOGY.md) before interpreting the results.

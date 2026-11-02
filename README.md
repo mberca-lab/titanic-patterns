@@ -1,157 +1,157 @@
-# Titanic / Patterns, Prediction & Uncertainty
+# Titanic / The Rule in the Data
 
-### The same data. Three different questions.
+### What a model learns when it is trained on a historical decision
 
-**A real, public-data case study in R and Python.** Association rules describe
-co-occurrence, random forest predicts an outcome, and Bayesian analysis makes
-model-based uncertainty visible. The methods are complementary—not interchangeable.
+On 15 April 1912 about 1,500 people died when the Titanic sank. Who reached a
+lifeboat was shaped by a human rule, *women and children first*, which was
+applied unevenly by class and by side of the ship.
 
-![Interactive Titanic story: three analytical questions and Bayesian group-rate intervals](outputs/story-preview.png)
+This project treats that record the way a **people-analytics team should treat
+past promotion, hiring or performance decisions**. Train a model on historical
+outcomes and it learns the decision rule that produced them, not merit or worth.
+Remove the protected attribute and a proxy can carry the rule straight back in.
+
+**A real, public-data case study in R and Python.** It covers 1,309 titanic3
+passengers, uses repeated grouped cross-validation, and runs an HR-style
+fairness audit. A synthetic promotion simulation with a known, injected bias
+checks whether the audit catches what we planted.
+
+![The Rule in the Data: memorial hero and the first chart, women and children vs men by class](outputs/story-preview.png)
 
 **[Explore the interactive story](https://mberca.github.io/titanic-patterns/)** ·
 **[Start in R](R/README.md)** · **[Python edition](Python/README.md)** ·
-**[Methodology](METHODOLOGY.md)**
+**[Methodology](METHODOLOGY.md)** · **[Data guide](data/README.md)**
+
+> Not a survival game. No individual names are published, and nothing here
+> scores or ranks people. Associations are not causes.
+
+## Five findings
+
+| # | Question | What the evidence shows |
+|---|---|---|
+| 1 | **Was there a rule?** | Women and children: 70% survived. Men: 17%. The rule weakened with class: 97% in first class, 46% in third. |
+| 2 | **Was it applied evenly?** | Among recorded lifeboat occupants, adult men made up **41%** of starboard boats but **12%** of port boats. The officers on each side read the same order differently. |
+| 3 | **What does a model learn?** | The policy terms alone reach a cross-validated AUC of 0.79. Ship structure alone (class, fare, port) reaches 0.69. Together they reach **0.85**. A random forest adds nothing reliable (difference 0.00, 95% CI −0.01 to 0.01). |
+| 4 | **Does removing sex remove the bias?** | Without sex terms the model reproduces 14% of the observed sex gap. Add the passenger's **title** and it reproduces **98%**. Title recovers recorded sex with AUC 0.9999. |
+| 5 | **Would an HR audit catch it?** | The impact ratio for men is 0.035, far below the four-fifths heuristic. The model is calibrated within each group, yet false-positive rates differ: 0.57 for women vs 0.006 for men. Both cannot be equalised at once. |
+
+### If this were promotion data
+
+The synthetic simulation contains 5,000 employees and is clearly labelled as
+synthetic. It injects a −0.70 log-odds penalty for women and a −0.50 penalty for
+regional staff. Part-time status has **no** effect.
+
+- **Historical decisions:** promotion rates are 12.4% for women and 21.4% for
+  men, an impact ratio of 0.58.
+- **Merit-only counterfactual:** the rates become 23.2% vs 23.6%, an impact
+  ratio of 0.98.
+- **Gender-visible model:** it recovers the planted penalty, −0.68 with a 95% CI
+  of −0.89 to −0.46.
+- **Gender-blind model:** the predicted gap shrinks, but the model now
+  penalises **part-time work** (−0.29, CI excludes 0), which had no true effect.
+  The reason is that 29% of women and 4% of men in the simulation are part-time.
+
+The bias did not disappear. It moved to a proxy.
 
 ## Find your way
 
 | Your goal | Start here |
 |---|---|
-| See the visual story without installing anything | [Interactive demo](https://mberca.github.io/titanic-patterns/) |
+| See the visual story without installing anything | [Interactive story](https://mberca.github.io/titanic-patterns/) |
 | Run or read the R edition | [`R/`](R/) · [`titanic-patterns.Rproj`](titanic-patterns.Rproj) |
 | Run or read the Python edition | [`Python/`](Python/) · [Executed notebook](notebooks/01_titanic_python.ipynb) |
-| Understand where the real data came from | [Data guide](data/README.md) · [Pinned provenance](data/provenance.json) |
-| Inspect the exact train/test/validation assignments | [`data/split.csv`](data/split.csv) |
-| Inspect model scores, rules, and uncertainty estimates | [R results](outputs/r/) · [Python results](outputs/python/) |
-| Check what is being compared | [Prespecified analysis contract](METHODOLOGY.md) |
-| Browse the wider portfolio | [GitHub profile](https://github.com/mberca) |
-
-## The questions
-
-1. **Describe:** How do survival rates vary across sex-by-class strata in the
-   observed sample, and how do counts affect their uncertainty?
-2. **Discover:** Which attribute combinations co-occur with a survival outcome
-   in the training data, relative to the outcome's baseline frequency?
-3. **Predict:** How do a prevalence baseline, random forest, and Bayesian
-   logistic model compare on the same held-out passengers?
-4. **Qualify:** What do probability calibration, coefficient uncertainty,
-   missing records, and sample selection stop us from claiming?
+| Understand where the data came from | [Data guide](data/README.md) · [Pinned provenance](data/provenance.json) |
+| Inspect splits and repeated folds | [`data/split.csv`](data/split.csv) · [`data/repeated_cv.csv`](data/repeated_cv.csv) |
+| Inspect the audit tables | [Python results](outputs/python/) · [R results](outputs/r/) |
+| Check what was prespecified | [Analysis contract](METHODOLOGY.md) |
 
 ## What makes this more than a Titanic accuracy exercise
 
-- **One split, two languages:** 712 training rows and 179 held-out test rows.
-  Shared tickets stay together to reduce cross-group leakage. Ticket groups
-  are not perfect family identifiers.
-- **Training-only preprocessing:** medians, the embarkation mode, centering,
-  and scaling are refitted inside each of five grouped validation folds.
-- **More than accuracy:** ROC AUC, Brier score, log loss, balanced accuracy,
-  ROC curves, and reliability plots with bin counts.
-- **Transparent Bayesian methods:** exact Beta(1,1) conjugate group summaries
-  and a documented Laplace approximation for logistic coefficients.
-- **A fair comparison:** prespecified forest settings and priors, a constant
-  baseline, and no tuning against the test set.
-- **Honest scope:** 891 labeled historical records, not the complete ship
-  manifest and not a representative modern deployment population.
+- **A decision lens.** Policy-only, structure-only and combined models separate
+  the rule from the ship. Sex-blind and proxy tests show how the rule survives
+  removal.
+- **Honest uncertainty.** The models run 20 × 5 repeated cross-validation,
+  grouped by shared ticket. Model differences use paired **Nadeau–Bengio**
+  corrected intervals rather than one lucky split.
+- **An audit an HR team would recognise:**
+  - impact ratios with Katz intervals;
+  - per-group calibration;
+  - TPR, FPR and PPV with Wilson intervals;
+  - suppression of any cell with a denominator below 20.
+- **A known-truth check.** The synthetic simulation tests whether the methods
+  recover a bias we planted ourselves.
+- **Two languages, one answer.** R and Python share every split and fold, and a
+  parity script checks that the Bayesian fits and audit tables agree. The random
+  forests are deliberately excluded, because their implementations differ.
+- **Careful data work:**
+  - fare is divided by ticket size, because it was recorded per ticket;
+  - the 891-row Kaggle sample is kept as a regression test;
+  - no names, tickets, cabins or biographical text are committed.
+
+The original analytical lenses remain in the interactive appendix. Select an
+association rule to compare its confidence with the same outcome's training
+baseline, with both denominators visible. Highlight a model across the held-out
+scorecard, ROC and calibration views without hiding the alternatives or changing
+the evaluation.
 
 ## Run it
 
-Use the [R guide](R/README.md) or [Python guide](Python/README.md) for dependency
-installation, analysis commands, notebook execution, and focused tests. Default
-analysis runs read the committed public-data extract; no Kaggle account, API
-key, or internet connection is needed.
-
-The R and Python programs write separate results into `outputs/r/` and
-`outputs/python/`, so rerunning one never silently replaces the other's results.
-
-## A few results to explore
-
-The **R edition's held-out results** illustrate why multiple views matter:
-
-| Model | ROC AUC ↑ | Brier score ↓ | Log loss ↓ |
-|---|---:|---:|---:|
-| Prevalence baseline | 0.500 | 0.237 | 0.667 |
-| Random forest | 0.894 | 0.112 | 0.410 |
-| Bayesian logistic | 0.880 | 0.136 | 0.422 |
-
-These are one fixed 179-record holdout, not proof of statistically significant
-or universal superiority. The visual story also shows five-fold development
-scores and calibration-bin counts. Switch to Python to inspect that edition's
-forest rather than assuming the two implementations are identical.
-
-**46 training-only association rules** pass the prespecified exploratory
-thresholds. The rules and Bayesian coefficients agree numerically across
-languages. For the descriptive Bayesian summaries, the 91 survivors among
-94 recorded first-class female passengers become a Beta(92,4) posterior:
-an explicit model of an observed subgroup, not a causal explanation.
-
-## Rebuild the browser story
-
-After generating both editions, verify the shared evidence and rebuild the
-self-contained browser story from the repository root:
+Use the [R guide](R/README.md) or [Python guide](Python/README.md) to install
+dependencies and run the analysis. Normal runs read the committed extract and
+need no internet access or account.
 
 ```powershell
-python scripts/check_parity.py
-python scripts/build_story.py
+.\.venv\Scripts\python.exe -m Python.run_analysis      # about 90 s, includes the audit
+.\.venv\Scripts\python.exe -m pytest tests -q
+.\.venv\Scripts\python.exe scripts\check_parity.py     # after running the R edition
+.\.venv\Scripts\python.exe scripts\build_story.py      # rebuild docs/index.html
 ```
 
-The parity check compares feature matrices, Bayesian coefficients and intervals,
-rule counts and metrics, and descriptive beta summaries. It deliberately does
-**not** require identical forest predictions: R's `randomForest` and
-scikit-learn use different implementations and probability definitions.
+R and Python write their results to `outputs/r/` and `outputs/python/` respectively.
+The browser story is a single self-contained HTML file with no backend,
+analytics, external fonts or CDN.
 
-The browser story embeds Plotly and all required result data. Open
-`docs/index.html` directly; the public demo publishes `main:/docs` with GitHub Pages. There
-is no backend, account requirement, analytics, external font, or CDN dependency.
+## Interpretation and responsible use
 
-## Bayesian does not mean exact
-
-The logistic model uses Normal(0, 2.5²) priors for coefficients and Normal(0, 5²)
-for the intercept. A posterior mode and inverse Hessian provide a **Laplace
-approximation**. Reported coefficient intervals are approximate, marginal 95%
-credible intervals. Evaluation uses **posterior-mode plug-in probabilities**,
-not a fully integrated posterior predictive. This is not MCMC, and no
-convergence-diagnostic claim is made.
-
-Separately, the descriptive sex-by-class rates use an exact Beta(1,1) update.
-Those summaries use the observed labeled sample and are clearly separated
-from training and held-out model evaluation.
-
-## Data, interpretation, and responsible use
-
-The source is Paul Hendricks' **titanic** package, whose pinned metadata declares
-CC0. It distributes the labeled Titanic competition training sample.
-The [data guide](data/README.md) records the immutable source URL and checksum.
-Names, cabin strings, and ticket strings are not retained in the committed extract.
-
-Association rules and coefficients do not establish why someone survived.
-Sex, class, family composition, and fare are correlated with unobserved historical
-circumstances. This project is **not** a causal study, a rescue-prioritization
-system, or evidence supporting discriminatory decisions. A small holdout does
-not establish universal model superiority or statistically significant differences.
-
-Missing data, curated records, imperfect group identifiers, model assumptions,
-and a deliberately limited feature set constrain the conclusions. Read the
-[full methodology](METHODOLOGY.md) before reusing the analysis.
+- This is an **observational** study of curated historical records. It covers
+  passengers only, not crew. Ages are missing for 29% of third-class passengers
+  and 6–12% of other classes, which is a data-quality gap that falls unevenly.
+- The source records sex as a binary.
+- Coefficients and rules describe associations within this record. They do not
+  explain anyone's fate.
+- The four-fifths rule and the calibration/error-rate impossibility are cited as
+  **context for analysts**, not legal advice.
+- The simulation is synthetic by design. Its value is that the truth is known.
+- Read the [full methodology](METHODOLOGY.md) before reusing any part of this.
 
 ## Repository map
 
 ```text
-R/                       R-first analysis, tests, and executable narrative
-Python/                  Python analysis and run instructions
+R/                       R edition: analysis, audit, tests, narrative
+Python/                  Python reference: analysis.py, audit.py, figures, notebook builder
 notebooks/               Executed Python notebook
-data/                    Minimal public-data extract, split, provenance
-outputs/r/               R model scores, predictions, rules, intervals, figures
-outputs/python/          Python model scores, predictions, rules, intervals, figures
-scripts/prepare_data.py  Recreate and checksum-check the public-data extract
-scripts/check_parity.py  Compare shared evidence across implementations
-scripts/build_story.py   Bundle result tables into the offline visual story
-web/story.html           Authored story layout and interaction code
-docs/index.html          Generated standalone demo / GitHub Pages entry
-METHODOLOGY.md           Evaluation, features, priors, thresholds, and limits
+data/                    titanic3 extract, splits, repeated folds, synthetic promotions, provenance
+outputs/python, outputs/r Model scores, audit tables, intervals, figures
+scripts/prepare_data.py  Recreate and checksum-check every data file
+scripts/check_parity.py  Compare shared evidence across R and Python
+scripts/build_story.py   Bundle result tables into the offline story
+web/story.html           Authored story layout and interactions
+docs/index.html          Generated standalone story (GitHub Pages)
+METHODOLOGY.md           Prespecified features, models, audit rules and limits
 ```
 
-## License
+## Data credit and licence
 
-Application code and original documentation: [MIT](LICENSE). The public-data
-source declares **CC0**; see [provenance](data/provenance.json). The generated
-demo embeds Plotly.js and retains its upstream license notice. Dependencies
-retain their respective licenses.
+Data obtained from http://hbiostat.org/data courtesy of the Vanderbilt University
+Department of Biostatistics. titanic3 was compiled by Thomas Cason from
+Encyclopedia Titanica. The hbiostat terms state: "Permission is granted to anyone
+wishing to use the data sets provided here." Upstream content is not necessarily
+public domain, so this repository commits only the minimal fields listed in
+[provenance](data/provenance.json). It contains no names or biographical text.
+
+Historical context comes from the British Wreck Commissioner's Inquiry (1912):
+1,178 lifeboat seats and about 711 people saved.
+
+Application code and original documentation are released under the
+[MIT licence](LICENSE). The generated story embeds the Instrument Serif font under
+the SIL Open Font License (see `web/assets/`). All other dependencies keep their own licences.

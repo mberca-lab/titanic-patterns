@@ -3,8 +3,13 @@
 "Survived",0,0
 "Pclass",0,0
 "Sex",0,0
-"Age",177,0.19865319865319866
+"Age",263,0.20091673032849502
 "SibSp",0,0
 "Parch",0,0
-"Fare",0,0
-"Embarked",2,0.0022446689113355782
+"Fare",1,0.00076394194041252863
+"TicketSize",0,0
+"FarePerPerson",1,0.00076394194041252863
+"Embarked",2,0.0015278838808250573
+"Title",0,0
+"BoatSide",0,0
+"InKaggleTrain",0,0

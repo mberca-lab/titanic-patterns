@@ -48,7 +48,7 @@ knitr::kable(data.frame(
                sum(d$Survived[s$subset == "test"]))),
   caption = "The split is committed once and shared by both languages.")
 knitr::kable(read.csv(file.path(out, "missingness.csv")), digits = 3,
-             caption = "Missing fractions refer to all 891 labeled records.")
+             caption = paste("Missing fractions refer to all", nrow(d), "labeled records."))
 ```
 
 ![Sample overview](overview.png)
@@ -64,12 +64,13 @@ The three prespecified models are a training-prevalence baseline, a
 500-tree random forest (`mtry=3`, `nodesize=5`), and regularized Bayesian
 logistic regression. The seed is `20261014`. Each of five training validation
 folds refits its own medians, embarkation mode, and sample-standard-deviation
-scales. The final models fit on all 712 training rows and transform the same
-179 test rows without refitting preprocessing.
+scales. The final models fit on all `r sum(s$subset == "train")` training rows and transform the same
+`r sum(s$subset == "test")` test rows without refitting preprocessing.
 
-The ordered inputs are `r paste(FEATURES, collapse = ", ")`. Age and fare
+The ordered inputs are `r paste(FEATURES, collapse = ", ")`. Age and fare per
+person (`FarePerPerson`, the ticket fare divided by the ticket's group size)
 use training medians; missing embarkation uses the alphabetical-first training
-mode in a tie. Fare is transformed with `log1p`; family size is
+mode in a tie. Fare per person is transformed with `log1p`; family size is
 `SibSp + Parch + 1`. Numeric covariates are centered and scaled with training
 sample SD; zero SD is replaced by one.
 
@@ -112,7 +113,7 @@ and a fixed direction; no automatic direction selection is permitted.
 
 ![Reliability and bin counts](calibration.png)
 
-The test set contains only 179 records. Scores and small-bin reliability
+The test set contains only `r sum(s$subset == "test")` records. Scores and small-bin reliability
 estimates can move with another sample or grouped partition. These figures
 do not establish a statistically significant gain or a universally best
 algorithm. R and Python forests need not agree: their fitting algorithms
@@ -146,9 +147,9 @@ This is neither MCMC nor an exact posterior analysis.
 
 ## 4. Exploratory association rules: count first, then interpret
 
-Only the 712 training records are transactions. Survival is confined to
+Only the `r sum(s$subset == "train")` training records are transactions. Survival is confined to
 one consequent item, never an antecedent. Antecedents use at most two items
-from recorded sex, class, raw age category, family category, or raw fare
+from recorded sex, class, raw age category, family category, or raw fare-per-person
 category. Missing ages/fares become `Unknown`, not imputed values. The
 fixed filters are support at least 0.04, confidence at least 0.60,
 joint count at least 20, lift at least 1.0, and total rule length 2–3.
@@ -177,7 +178,7 @@ training-only exhibits are not validated predictions or causal discoveries.
 
 ## 5. A separate Bayesian question: describe sex-by-class rates
 
-For this section **all 891 labeled records** describe six historical strata.
+For this section **all `r nrow(d)` labeled records** describe six historical strata.
 A Beta(1,1) prior and `s` survivors among `n` records yield
 Beta(`s+1`, `n-s+1`). The table reports the exact conjugate posterior mean
 and central 95% beta credible interval. This separate descriptive
@@ -194,6 +195,32 @@ knitr::kable(rates, digits = 4,
 Large differences in these observed records do not identify mechanisms.
 The posterior intervals are conditional on the binomial model and prior,
 not a correction for missing records, selection, dependence, or confounding.
+
+## 6. Audit: what a model learns from historical decisions
+
+`R/audit.R` mirrors `Python/audit.py`. Five Laplace-approximated Bayesian
+logistic specifications (policy terms, structural terms, both, sex-blind, and
+sex-blind plus title), a prevalence baseline, and a 300-tree random forest are
+refitted inside each of the 20 x 5 committed grouped folds in
+`data/repeated_cv.csv`. Differences from the reference *Policy + structure*
+model use Nadeau-Bengio corrected resampled t intervals.
+
+```{r audit}
+comparison <- read.csv(file.path(out, "model_comparison.csv"))
+knitr::kable(comparison[comparison$metric == "roc_auc",
+                        c("model", "mean_model", "mean_difference", "lower", "upper")],
+             digits = 4, caption = "Repeated grouped CV AUC differences vs Policy + structure.")
+knitr::kable(read.csv(file.path(out, "proxy_gap.csv")), digits = 3,
+             caption = "How much of the observed female-male gap each model reproduces out of fold.")
+fairness <- read.csv(file.path(out, "fairness_audit.csv"))
+knitr::kable(fairness[c("grouping", "group", "n", "base_rate", "selection_rate",
+                        "impact_ratio", "tpr", "fpr", "ppv")], digits = 3,
+             caption = "Group audit at threshold 0.5; rates with denominators below 20 are suppressed.")
+```
+
+Removing recorded sex does not remove its signal when title (or other
+proxies) remain. The synthetic promotion example (`sim_*.csv`) shows a model
+recovering an injected gender penalty; it contains no real employees.
 
 ## Reproduce and inspect
 

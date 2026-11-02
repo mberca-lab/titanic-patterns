@@ -62,9 +62,9 @@ class Preprocessor:
     @classmethod
     def fit(cls, data):
         modes = data.Embarked.dropna().mode().sort_values()
-        if modes.empty or data.Age.notna().sum() == 0 or data.Fare.notna().sum() == 0:
+        if modes.empty or data.Age.notna().sum() == 0 or data.FarePerPerson.notna().sum() == 0:
             raise ValueError("Training data cannot supply imputation statistics.")
-        result = cls(float(data.Age.median()), float(data.Fare.median()), str(modes.iloc[0]), {}, {})
+        result = cls(float(data.Age.median()), float(data.FarePerPerson.median()), str(modes.iloc[0]), {}, {})
         raw = result.continuous(data)
         result.means = {c: float(raw[c].mean()) for c in CONTINUOUS}
         result.scales = {
@@ -74,9 +74,10 @@ class Preprocessor:
         return result
 
     def continuous(self, data):
+        # Fare is recorded per ticket; FarePerPerson divides it by the ticket's group size.
         return pd.DataFrame({
             "age_z": data.Age.fillna(self.age_median),
-            "log_fare_z": np.log1p(data.Fare.fillna(self.fare_median)),
+            "log_fare_z": np.log1p(data.FarePerPerson.fillna(self.fare_median)),
             "family_size_z": data.SibSp + data.Parch + 1,
         }, index=data.index)
 
@@ -189,8 +190,9 @@ def transactions(data):
                "Child (<16)" if row.Age < 16 else "Adult (16-59)" if row.Age < 60 else "Older (60+)")
         family_n = row.SibSp + row.Parch + 1
         family = "Alone" if family_n == 1 else "2-4" if family_n <= 4 else "5+"
-        fare = ("Unknown" if pd.isna(row.Fare) else
-                "Low (<=10)" if row.Fare <= 10 else "Middle (10-30)" if row.Fare <= 30 else "High (>30)")
+        fare = ("Unknown" if pd.isna(row.FarePerPerson) else
+                "Low (<=10)" if row.FarePerPerson <= 10 else
+                "Middle (10-30)" if row.FarePerPerson <= 30 else "High (>30)")
         baskets.append(frozenset([
             f"Sex={row.Sex}", f"Class={row.Pclass}", f"Age={age}", f"Family={family}",
             f"Fare={fare}", "Outcome=Survived" if row.Survived else "Outcome=Did not survive",
@@ -259,21 +261,25 @@ def descriptive_rates(data):
 
 
 def missingness(data):
-    fields = ["PassengerId", "Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"]
+    fields = [c for c in data.columns if c not in ("subset", "cv_fold", "ticket_group")]
     return pd.DataFrame({
         "field": fields, "n_missing": data[fields].isna().sum().to_numpy(),
         "pct_missing": data[fields].isna().mean().to_numpy(),
     })
 
 
+BIN_LABELS = ["[0,0.2]", "(0.2,0.4]", "(0.4,0.6]", "(0.6,0.8]", "(0.8,1]"]
+
+
 def reliability(y, probability, n_bins=5):
-    """Equal-width bins with explicit counts, including empty bins."""
+    """Right-closed equal-width bins (R's cut(include.lowest=TRUE)), including empty bins."""
     y, probability = np.asarray(y), np.asarray(probability)
-    bins = np.minimum((probability * n_bins).astype(int), n_bins - 1)
+    breaks = np.arange(n_bins + 1) * (1 / n_bins)  # same floats as R's seq(0, 1, .2)
+    bins = np.clip(np.searchsorted(breaks, probability, side="left") - 1, 0, n_bins - 1)
     return pd.DataFrame([
-        {"bin": i, "count": int((bins == i).sum()),
-         "mean_probability": float(probability[bins == i].mean()) if (bins == i).any() else np.nan,
-         "observed_rate": float(y[bins == i].mean()) if (bins == i).any() else np.nan}
+        {"bin": BIN_LABELS[i], "n": int((bins == i).sum()),
+         "predicted": float(probability[bins == i].mean()) if (bins == i).any() else np.nan,
+         "observed": float(y[bins == i].mean()) if (bins == i).any() else np.nan}
         for i in range(n_bins)
     ])
 
@@ -301,7 +307,8 @@ def run_analysis(root=ROOT):
         predictions.extend({
             "PassengerId": int(pid), "Survived": int(y), "model": model, "probability": float(p),
         } for pid, y, p in zip(test.PassengerId, test.Survived, probability))
-        calibration.append(reliability(test.Survived, probability).assign(model=model))
+        calibration.append(reliability(test.Survived, probability).assign(model=model)[
+            ["model", "bin", "n", "predicted", "observed"]])
     tables = {
         "metrics": pd.DataFrame(metrics), "predictions": pd.DataFrame(predictions),
         "coefficients": bayes.coefficients(),
@@ -324,9 +331,11 @@ def run_analysis(root=ROOT):
         "bayesian_optimizer_success": bayes.optimizer_success,
         "bayesian_optimizer_message": bayes.optimizer_message,
         "prediction_type": "Posterior-mode plug-in; Laplace marginal coefficient intervals",
-        "coverage": "891 labeled records; not the complete Titanic manifest",
+        "coverage": f"{len(data):,} titanic3 passenger records; crew excluded",
     }
     (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    from .audit import run_audit
     from .figures import overview
+    tables.update(run_audit(data, root, output))
     overview(data, tables, output / "overview.png")
     return data, tables, summary

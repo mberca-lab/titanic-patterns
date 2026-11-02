@@ -2,7 +2,8 @@
 
 Open `titanic-patterns.Rproj` in RStudio, or run R from the repository root.
 The R analysis is self-contained and never reads Python outputs. It uses only
-the committed public `data/passengers.csv` and grouped `data/split.csv`.
+the committed public `data/passengers.csv`, grouped `data/split.csv`, repeated
+grouped folds `data/repeated_cv.csv`, and the synthetic `data/synthetic_promotions.csv`.
 Read [the shared analysis contract](../METHODOLOGY.md) before interpreting results.
 
 ## Run
@@ -17,10 +18,14 @@ source("R/render_analysis.R") # Execute the narrative and save Markdown.
 On Windows, the equivalent commands are:
 
 ```powershell
-& 'C:\Program Files\R\R-4.4.3\bin\Rscript.exe' R\run_analysis.R
-& 'C:\Program Files\R\R-4.4.3\bin\Rscript.exe' R\test-analysis.R
-& 'C:\Program Files\R\R-4.4.3\bin\Rscript.exe' R\render_analysis.R
+& 'C:\Program Files\R\R-4.6.2\bin\Rscript.exe' R\run_analysis.R
+& 'C:\Program Files\R\R-4.6.2\bin\Rscript.exe' R\test-analysis.R
+& 'C:\Program Files\R\R-4.6.2\bin\Rscript.exe' R\render_analysis.R
+.\.venv\Scripts\python.exe scripts\check_parity.py   # R vs Python parity (after both runs)
 ```
+
+`Rscript` need not be on `PATH`; call it by its full path as above. The full
+run (main analysis plus the 20 x 5 repeated-CV audit) takes about 30 seconds.
 
 All commands run from the repository root. No download, Python, Shiny server,
 LaTeX, or Pandoc is needed to execute the analysis. Rendering uses
@@ -33,6 +38,7 @@ with relative links to the neighboring PNGs. No standalone HTML is generated.
 | File | Purpose |
 | --- | --- |
 | `analysis.R` | Reusable preprocessing, models, scoring, rules, beta updates, plots |
+| `audit.R` | People-analytics audit mirroring `Python/audit.py`; called by `run_analysis()` |
 | `run_analysis.R` | Root-relative executable entry point |
 | `test-analysis.R` | Hand-calculated metrics, leakage/group separation, analytic derivative and known posterior fixture tests, rule recounts, export integration |
 | `analysis.Rmd` | Runnable narrative with computed tables and uncertainty limitations |
@@ -61,7 +67,29 @@ All artifacts are regenerated under `outputs/r/`:
   explicitly retained with count zero and unavailable estimates.
 - Seven PNGs: `overview`, `performance`, `roc`, `calibration`,
   `bayesian_effects`, `bayesian_rates`, and `rules`.
+- `cv_predictions.csv`: development-fold probabilities for every model.
 - Executed `analysis.md` and `session-info.txt`.
+
+Audit tables (`audit.R`, same names and columns as `outputs/python/`):
+
+- `cv_scores.csv`, `oof_mean.csv`: 20 x 5 grouped repeated-CV scores (survival and
+  recorded-sex recovery) and out-of-fold mean probabilities per model.
+- `model_comparison.csv`: differences from *Policy + structure* with Nadeau-Bengio
+  corrected intervals; `sex_recovery.csv`: how well proxies recover recorded sex.
+- `policy_fit.csv`, `policy_coefficients.csv`: full-data Laplace fits of the five specs.
+- `proxy_gap.csv`, `fairness_audit.csv`: out-of-fold sex gap reproduction; group
+  selection rates, Wilson intervals, Katz impact ratios, TPR/FPR/PPV (suppressed when
+  the denominator is below 20).
+- `policy_groups.csv`, `child_cutoffs.csv`, `boat_side.csv`, `missing_age.csv`:
+  historical descriptive tables.
+- `sim_coefficients.csv`, `sim_gap.csv`, `sim_recovery.csv`, `sim_impact.csv`:
+  synthetic promotion audit (no real employees).
+
+All Laplace-model tables match Python within 2e-6 (most within 1e-12). Repeated-CV
+random-forest rows use `randomForest` and are not expected to match scikit-learn.
+A few fold ROC AUCs differ by exactly one tied pair: identical design rows have equal
+probabilities in R, while numpy's matmul can separate them by one ulp;
+`scripts/check_parity.py` verifies and reports each such flip.
 
 The CSV writer uses 17-digit precision; all predictors and preprocessing
 values remain unrounded. No fitted model or personal passenger simulator
@@ -69,7 +97,7 @@ is serialized.
 
 ## Interpretation guardrails
 
-This is a selected 891-record historical subset, not the complete manifest.
+This is the 1,309-record titanic3 passenger list (crew excluded), not the complete manifest.
 Preprocessing and Apriori see training records only; every CV fold relearns
 its transform. Forest settings are fixed at 500 trees, `mtry=3`, `nodesize=5`,
 factor outcome levels `0,1`, positive probability `"1"`, seed `20261014`.

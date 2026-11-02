@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 from scipy.optimize._numdiff import approx_derivative
 
 from Python.analysis import (
@@ -50,7 +51,7 @@ def test_preprocessing_learns_training_only_and_relearns_inside_folds():
     original = prep.as_dict()
     expected = prep.transform(train)
     test.loc[:, "Age"] = 99999
-    test.loc[:, "Fare"] = 1e12
+    test.loc[:, "FarePerPerson"] = 1e12
     prep.transform(test)
     assert prep.as_dict() == original
     np.testing.assert_allclose(expected.iloc[:, :3].mean(), 0, atol=1e-14)
@@ -59,13 +60,13 @@ def test_preprocessing_learns_training_only_and_relearns_inside_folds():
     inner = train.loc[train.cv_fold.ne(0)]
     inner_prep = Preprocessor.fit(inner)
     assert inner_prep.age_median == inner.Age.median()
-    assert inner_prep.means["log_fare_z"] == np.log1p(inner.Fare.fillna(inner.Fare.median())).mean()
+    assert inner_prep.means["log_fare_z"] == np.log1p(inner.FarePerPerson.fillna(inner.FarePerPerson.median())).mean()
     assert inner_prep.as_dict() != prep.as_dict()
 
 
 def test_mode_ties_missingness_zero_variance_and_rules_unknowns():
     frame = pd.DataFrame({
-        "Age": [np.nan, 20, 20, 20], "Fare": [np.nan, 10, 10, 10],
+        "Age": [np.nan, 20, 20, 20], "FarePerPerson": [np.nan, 10, 10, 10],
         "Embarked": ["Q", "C", "Q", "C"], "Sex": ["female"] * 4,
         "Pclass": [1] * 4, "SibSp": [0] * 4, "Parch": [0] * 4, "Survived": [1] * 4,
     })
@@ -79,9 +80,10 @@ def test_mode_ties_missingness_zero_variance_and_rules_unknowns():
 
 def test_committed_source_group_separation_and_coverage():
     data = load_data()
-    assert len(data) == 891
-    assert data.PassengerId.nunique() == 891
-    assert data.query("subset == 'train'").shape[0] == 712
+    assert len(data) == 1309
+    assert data.PassengerId.nunique() == 1309
+    assert data.query("subset == 'train'").shape[0] == 1048
+    assert data.InKaggleTrain.sum() == 891
     assert data.groupby("ticket_group").subset.nunique().max() == 1
     assert data.query("subset == 'train'").groupby("ticket_group").cv_fold.nunique().max() == 1
 
@@ -94,8 +96,10 @@ def test_event_direction_threshold_and_calibration_counts():
     assert correct["balanced_accuracy"] == 1
     assert correct["brier"] < reverse["brier"]
     calibration = reliability(y, probability)
-    assert calibration["count"].tolist() == [1, 1, 1, 0, 1]
-    assert calibration["count"].sum() == 4
+    # right-closed bins, as in R: 0.2 belongs to [0,0.2] and 0.6 to (0.4,0.6]
+    assert calibration["n"].tolist() == [2, 0, 1, 0, 1]
+    assert reliability([1], [.6])["n"].tolist() == [0, 0, 1, 0, 0]
+    assert calibration["n"].sum() == 4
 
 
 def test_export_contract_matches_source_design_and_event_metrics():
@@ -130,3 +134,25 @@ def test_export_contract_matches_source_design_and_event_metrics():
         pd.read_csv(output / "rules.csv"), association_rules(transactions(train)),
         check_dtype=False, atol=1e-14, rtol=1e-14,
     )
+
+
+@pytest.mark.parametrize("field,value", [
+    ("count", .5), ("antecedent_count", 0), ("confidence", .1),
+    ("baseline", .9), ("lift", 1),
+])
+def test_story_rejects_rule_rates_or_counts_that_disagree(monkeypatch, field, value):
+    import json
+    from scripts import build_story
+
+    original = build_story.read_table
+
+    def altered_table(path, **kwargs):
+        rows = original(path, **kwargs)
+        if path.name == "rules.csv":
+            rows[0][field] = value
+        return rows
+
+    monkeypatch.setattr(build_story, "read_table", altered_table)
+    summary = json.loads((ROOT / "outputs" / "python" / "summary.json").read_text())
+    with pytest.raises(build_story.ContractError, match="rule|Rule"):
+        build_story.load_edition(ROOT / "outputs" / "python", summary)
