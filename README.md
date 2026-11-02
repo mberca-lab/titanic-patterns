@@ -2,9 +2,7 @@
 
 ### What prediction can—and cannot—tell us
 
-The Titanic disaster claimed around 1,500 lives on 15 April 1912. Behind these
-historical records were people, families, and circumstances that no statistical
-model can fully represent.
+The Titanic disaster claimed around 1,500 lives on 15 April 1912.
 
 **Predicting an outcome is not explaining it.** This historical observational
 study separates descriptive patterns, predictive performance and uncertainty.

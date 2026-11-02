@@ -186,9 +186,9 @@ class StoryTests(unittest.TestCase):
         page = self.open_story(1280, "reduce")
         aside = page.locator(".hero > .aside").inner_text()
         self.assertIn("1,500", aside)
-        self.assertIn("people, families", aside)
+        self.assertIn("The Titanic disaster claimed around 1,500 lives on 15 April 1912.", aside)
         self.assertIn("not why any individual survived or died", aside)
-        for wording in ("in memory of", "not a survival game", "scores no one"):
+        for wording in ("in memory of", "not a survival game", "scores no one", "fully represent"):
             self.assertNotIn(wording, aside.lower())
         self.assertIn("Patterns", page.locator("h1").inner_text())
         credit = json.loads((ROOT / "data" / "provenance.json").read_text(encoding="utf-8"))
