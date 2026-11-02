@@ -11,10 +11,11 @@ def make_notebook():
         "display_name": "Python 3 (Titanic)", "language": "python", "name": "python3",
     }
     notebook.cells = [
-        md("# TITANIC\n## The rule in the data: what a model learns from a historical decision\n\n"
-           "**Question:** Survival on the Titanic was shaped by a human rule (women and children first), "
-           "applied unevenly by class and by side of the ship. What does a model learn when trained on that "
-           "record, and would a people-analytics audit catch it?\n\n"
+        md("# TITANIC\n## Patterns in the record: prediction is not explanation\n\n"
+           "**Question:** What do descriptive patterns, predictive comparisons and uncertainty tell us "
+           "about historical passenger records? The models do not identify a decision policy or its "
+           "causal effect. A separate synthetic promotion example tests selected audit methods under "
+           "specified generating assumptions, not in real workplaces.\n\n"
            "This is a historical observational case study, not a rescue-prioritization system. "
            "No individual simulation or causal claim is offered."),
         md("### Decision log / public data, bounded scope\n\n"
@@ -89,7 +90,7 @@ def make_notebook():
              "print('Posterior max absolute gradient:', summary['bayesian_max_abs_gradient'])\n"
              "print('Optimizer:', summary['bayesian_optimizer_message'])\n"
              "display(Image(filename=str(root / 'outputs' / 'python' / 'bayesian_effects.png')))"),
-        md("## 07 / The rule and the ship\n\n"
+        md("## 07 / Recorded groups and historical context\n\n"
            "Women and children vs men by class, sensitivity to the child cutoff, the side of the ship each "
            "lifeboat was launched from, and where ages are missing. All proportions carry Wilson 95% intervals. "
            "Boat side is descriptive only and never a predictor."),
@@ -102,15 +103,16 @@ def make_notebook():
         code("display(tables['policy_fit'])\n"
              "display(tables['model_comparison'].query(\"metric == 'roc_auc'\")"
              "[['model', 'mean_model', 'mean_difference', 'lower', 'upper']])"),
-        md("## 09 / Remove the attribute, keep the bias\n\n"
+        md("## 09 / Attribute removal, proxies and group diagnostics\n\n"
            "Dropping sex terms removes most of the predicted sex gap, but adding title (Mr/Mrs/Miss/Master) "
-           "brings it back: title is a near-perfect proxy for recorded sex. Then an HR-style audit on "
-           "out-of-fold probabilities: impact ratios (context: the four-fifths heuristic), calibration and "
-           "error rates per group, with cells below 20 suppressed."),
+           "brings it back: title is a near-perfect proxy for recorded sex. This does not identify a "
+           "historical mechanism or establish discrimination. Group diagnostics use out-of-fold "
+           "probabilities: rate ratios, agreement in group averages and error rates, with cells below 20 "
+           "suppressed. Average agreement does not establish calibration across the probability range."),
         code("display(tables['proxy_gap'])\ndisplay(tables['sex_recovery'])\n"
              "display(tables['fairness_audit'][['grouping', 'group', 'n', 'base_rate', 'mean_predicted', "
              "'selection_rate', 'impact_ratio', 'ir_lower', 'ir_upper', 'tpr', 'fpr', 'ppv']])"),
-        md("## 10 / If this were promotion data: a synthetic check with known truth\n\n"
+        md("## 10 / A separate synthetic promotion example\n\n"
            "5,000 **synthetic** employees with an injected -0.70 log-odds penalty for women, -0.50 for "
            "regional staff and no part-time effect. A gender-visible model recovers the penalty; a "
            "gender-blind model moves it onto part-time work, a proxy with no true effect."),

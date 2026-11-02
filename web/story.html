@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="The rule in the data: what a model learns when it is trained on a historical decision. A respectful, evidence-first Titanic case study for people analytics, in R and Python.">
-<title>The Rule in the Data / What a model learns from a historical decision</title>
+<meta name="description" content="Patterns in the record: a Titanic case study separating description, prediction and uncertainty, with a separate synthetic example of model auditing. Built in R and Python.">
+<title>Titanic / Patterns in the Record</title>
 <script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("scoutTheme");
@@ -344,8 +344,8 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
 <a class="skip" href="#story">Skip to story</a>
 <div class="shell">
 <header class="masthead">
-  <div class="mark">Titanic / <em>The rule in the data</em></div>
-  <nav class="nav" aria-label="Story navigation"><a href="#rule">The rule</a><a href="#model">The model</a><a href="#proxy">The proxy</a><a href="#audit">The audit</a><a href="#promotion">Promotion data</a><a href="#reproduce">Reproduce</a><button id="theme" type="button" aria-label="Toggle light or dark theme">Change theme</button></nav>
+  <div class="mark">Titanic / <em>Patterns in the record</em></div>
+  <nav class="nav" aria-label="Story navigation"><a href="#rule">The record</a><a href="#model">The models</a><a href="#proxy">Proxies</a><a href="#audit">Diagnostics</a><a href="#promotion">Synthetic example</a><a href="#reproduce">Reproduce</a><button id="theme" type="button" aria-label="Toggle light or dark theme">Change theme</button></nav>
 </header>
 <main id="story">
 <section class="hero" aria-labelledby="hero-title">
@@ -363,42 +363,41 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
   </svg>
   <div>
     <div class="eyebrow">Field study 03 / Public historical records / R + Python</div>
-    <h1 id="hero-title">The rule<br>in the <em>data.</em><span class="subtitle">What a model learns when it is trained on a historical decision.</span></h1>
-    <p class="lead">In 1912 a human rule, <em>women and children first</em>, shaped who reached a lifeboat. It was applied unevenly, by class and by side of the ship. Train a model on that record and it learns the rule, not anyone’s worth. The same thing happens when a model learns from past promotions, hires or ratings.</p>
+    <h1 id="hero-title">Patterns<br>in the <em>record.</em><span class="subtitle">What prediction can—and cannot—tell us.</span></h1>
+    <p class="lead">Historical passenger records reveal differences in survival, but <em>prediction is not explanation.</em> Explore how group comparisons, model performance and uncertainty answer different questions.</p>
   </div>
-  <aside class="aside" aria-label="In memory and about this study">
-    <span class="badge">NOT A SURVIVAL GAME</span>
-    <p class="memorial">In memory of the about 1,500 people who died when Titanic sank on 15 April 1912.</p>
-    <p>This study reads the records of <span data-k="rows"></span> passengers; crew are not in the source. It names no one and scores no one.</p>
+  <aside class="aside" aria-label="Historical context and study scope">
+    <p class="memorial">The Titanic disaster claimed around 1,500 lives on 15 April 1912. Behind these historical records were people, families, and circumstances that no statistical model can fully represent.</p>
+    <p>This study examines records of <span data-k="rows"></span> passengers; the source excludes crew. Its findings describe patterns in the available data—not why any individual survived or died.</p>
     <p class="credit" data-k="credit"></p>
   </aside>
 </section>
 <section class="strip" aria-label="Headline evidence">
   <div><strong class="accent" data-k="wc-all"></strong><span>of women and children in the record survived</span></div>
   <div><strong data-k="men-all"></strong><span>of men survived</span></div>
-  <div><strong data-k="auc-ref"></strong><span>cross-validated AUC: a model of the rule plus the ship</span></div>
-  <div><strong class="accent" data-k="ir-male"></strong><span>impact ratio for men when that model “selects” at 0.5, against an 0.8 rule of thumb</span></div>
+  <div><strong data-k="auc-ref"></strong><span>cross-validated AUC: combined demographic and structural features</span></div>
+  <div><strong class="accent" data-k="ir-male"></strong><span>male-to-female predicted-positive rate ratio at an illustrative 0.5 threshold</span></div>
 </section>
 <section class="context-intro" id="people-analytics-bridge" aria-labelledby="people-analytics-title">
-  <div><div class="kicker">Why this matters for people analytics</div><h2 id="people-analytics-title">The label is a record of a decision.</h2></div>
+  <div><div class="kicker">What this study can—and cannot—show</div><h2 id="people-analytics-title">Predicting an outcome is not explaining it.</h2></div>
   <div>
-    <p>In HR data the outcome is rarely a fact about a person. “Promoted”, “hired” and “high performer” record past decisions, made under a policy, by people, and not always evenly. A model trained on those labels learns the policy that produced them.</p>
-    <p>The Titanic is a stark, well-documented case of a decision rule written into an outcome. This page uses it to show how to recognise, measure and audit that inheritance, then repeats the audit on synthetic promotion data where the truth is known. The findings remain specific to this incomplete historical sample. It is not a model of employee behaviour or guidance for workplace decisions.</p>
+    <p>A model can predict recorded outcomes accurately without establishing why they occurred. This study examines patterns, predictive performance, and uncertainty in historical passenger records. Those are different analytical questions, and their answers should not be treated as interchangeable. The findings remain specific to this incomplete historical sample.</p>
+    <p>A separate, explicitly synthetic promotion example explores how selected audit methods behave under specified assumptions, including deliberately introduced disparities. It illustrates the methods—not a conclusion about real employees or organizations.</p>
   </div>
 </section>
 
 <section class="chapter" id="rule" aria-labelledby="rule-title">
-  <div class="chapter-head reveal"><div><div class="chapter-number">01 / The rule and the ship</div><h2 id="rule-title">Women and children first, <em>unevenly.</em></h2></div><p>“Women and children first” was an order, not a law of nature. The record shows it was followed: and that how far it reached depended on class, on the side of the ship, and on who was counted as a child. Intervals are 95% Wilson intervals around observed proportions.</p></div>
+  <div class="chapter-head reveal"><div><div class="chapter-number">01 / Describe the historical record</div><h2 id="rule-title">Survival differed. <em>Context matters.</em></h2></div><p>Survival rates differ across recorded sex, age and class. These patterns can be read alongside historical accounts of “women and children first”, but do not isolate the effect of an order or explain individual outcomes. Intervals are 95% Wilson intervals around observed proportions.</p></div>
   <div class="panel grid-wide reveal">
     <div>
-      <div class="panel-head"><div><h3>Survival by the rule’s two groups, within each class</h3><p>Children are passengers recorded under 16. Every passenger in the record appears once in the “All” row.</p></div></div>
+      <div class="panel-head"><div><h3>Survival by recorded group, within each class</h3><p>Children are passengers recorded under 16. Every passenger in the record appears once in the “All” row. Missing ages do not establish that a passenger was an adult.</p></div></div>
       <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Women and children</li><li><span class="key" style="--c:var(--cp-text)"></span>Men</li><li><span class="key line"></span>95% interval</li></ul>
       <div id="policy-chart" class="rc" role="figure" aria-label="Survival of women and children versus men, overall and by class, with 95 percent intervals"></div>
     </div>
     <aside class="reading">
-      <p class="pull">In first class the rule reached <em data-k="wc-1"></em> of women and children. In third, <em data-k="wc-3"></em>.</p>
-      <p>Men in first class survived at <b data-k="men-1"></b>, more than twice the rate of men in second (<span data-k="men-2"></span>) or third class (<span data-k="men-3"></span>). The rule was real, and it was not the only thing that mattered.</p>
-      <p class="note">These are associations in a curated historical record. They describe where a rule landed, not why any one person lived or died.</p>
+      <p class="pull">Among women and children, <em data-k="wc-1"></em> survived in first class. In third, <em data-k="wc-3"></em>.</p>
+      <p>Men in first class survived at <b data-k="men-1"></b>, more than twice the rate of men in second (<span data-k="men-2"></span>) or third class (<span data-k="men-3"></span>). Different comparisons reveal different aspects of the record.</p>
+      <p class="note">These are associations in curated historical records, not estimates of policy enforcement or causal effects.</p>
     </aside>
   </div>
   <div class="panel reveal">
@@ -418,7 +417,7 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
         <div><span class="big-num">1,178</span><span class="cap">lifeboat seats on board</span></div>
         <div><span class="big-num accent">~711</span><span class="cap">people saved, passengers and crew</span></div>
       </div>
-      <p>There were not enough seats for everyone, and not every seat was used. Scarcity is when a decision rule matters most, and when it is applied fastest and least evenly.</p>
+      <p>There were not enough seats for everyone, and not every seat was used. This is historical context, not a reconstruction of individual access to a lifeboat.</p>
       <p class="note">Source: British Wreck Commissioner’s Inquiry (1912), cited as historical context. These two figures are not computed from the passenger record, which excludes crew.</p>
     </div>
     <figure class="seat-figure">
@@ -427,13 +426,13 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
     </figure>
   </div>
   <div class="panel reveal">
-    <div class="panel-head"><div><h3>Port and starboard read the same order differently</h3><p>Of passengers recorded boarding a boat, the share who were adult men. Shading shows the side-level share; the record is not split by individual boat here.</p></div><span class="badge sea">SCHEMATIC, NOT TO SCALE</span></div>
+    <div class="panel-head"><div><h3>Different passenger profiles across recorded boat sides</h3><p>Of passengers with a recorded boat, the share classified as adult men. Shading shows the side-level share; the record is not split by individual boat here. Missing ages limit the classification.</p></div><span class="badge sea">SCHEMATIC, NOT TO SCALE</span></div>
     <div class="deck"><svg id="deck" viewBox="0 0 1000 320" role="img" aria-labelledby="deck-title"><title id="deck-title">Top-down schematic of the boat deck: port-side boats shaded to the port share of adult men, starboard-side boats to the starboard share</title></svg></div>
     <div class="side-stats">
-      <div class="side-stat"><div class="kicker">Port side · even boats</div><span class="big-num" data-k="port-share"></span><p><span data-k="port-men"></span> adult men of <span data-k="port-n"></span> recorded occupants (95% interval <span data-k="port-ci"></span>). Second Officer Lightoller’s side, often read as <em>women and children only</em>.</p></div>
-      <div class="side-stat"><div class="kicker">Starboard side · odd boats</div><span class="big-num accent" data-k="stb-share"></span><p><span data-k="stb-men"></span> adult men of <span data-k="stb-n"></span> recorded occupants (95% interval <span data-k="stb-ci"></span>). First Officer Murdoch’s side, often read as <em>women and children first</em>.</p></div>
+      <div class="side-stat"><div class="kicker">Port side · even boats</div><span class="big-num" data-k="port-share"></span><p><span data-k="port-men"></span> classified as adult men of <span data-k="port-n"></span> recorded occupants (95% interval <span data-k="port-ci"></span>).</p></div>
+      <div class="side-stat"><div class="kicker">Starboard side · odd boats</div><span class="big-num accent" data-k="stb-share"></span><p><span data-k="stb-men"></span> classified as adult men of <span data-k="stb-n"></span> recorded occupants (95% interval <span data-k="stb-ci"></span>).</p></div>
     </div>
-    <p class="note"><span data-k="unknown-n"></span> occupants with an unrecorded side are not shown. One order, two readings: the same policy text produced different outcomes depending on who applied it. HR policies work the same way across managers and sites.</p>
+    <p class="note"><span data-k="unknown-n"></span> occupants with an unrecorded side are not shown. These figures describe passengers with recorded boats, not everyone aboard. They do not distinguish policy enforcement from differences in access, timing or recording.</p>
   </div>
   <div class="panel grid-wide reveal">
     <div>
@@ -441,12 +440,12 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
       <p class="note" style="margin-top:0">Share of passengers with no recorded age, by class.</p>
       <div id="missing" class="missing"></div>
     </div>
-    <aside class="reading"><p class="pull">Data quality is an equity question.</p><p>Age is missing for <b data-k="miss-3"></b> of third-class passengers, against <span data-k="miss-1"></span> in first and <span data-k="miss-2"></span> in second. Whoever is least well recorded is also least well modelled. In HR data, the same pattern shows up in contractors, frontline staff and acquired teams.</p></aside>
+    <aside class="reading"><p class="pull">Uneven missingness needs attention.</p><p>Age is missing for <b data-k="miss-3"></b> of third-class passengers, against <span data-k="miss-1"></span> in first and <span data-k="miss-2"></span> in second. This limits comparisons and age-based classifications. These counts alone do not establish how much prediction error the missingness causes.</p></aside>
   </div>
 </section>
 
 <section class="chapter" id="model" aria-labelledby="model-title">
-  <div class="chapter-head reveal"><div><div class="chapter-number">02 / Train a model on it</div><h2 id="model-title">The model learns <em>the decision.</em></h2></div><p>Five prespecified Bayesian logistic models and a random forest benchmark, scored with 20 × 5 repeated cross-validation grouped by shared ticket. Each model is compared with the reference, <b>Policy + structure</b>, on the same folds. Intervals are paired, Nadeau–Bengio corrected 95% intervals.</p></div>
+  <div class="chapter-head reveal"><div><div class="chapter-number">02 / Compare predictive models</div><h2 id="model-title">Different features. <em>Different predictions.</em></h2></div><p>Five prespecified Bayesian logistic models and a random forest benchmark, scored with 20 × 5 repeated cross-validation grouped by shared ticket. Each model is compared with the reference, <b>Policy + structure</b>, on the same folds. Intervals are paired, Nadeau–Bengio corrected 95% intervals.</p></div>
   <div class="panel grid-wide reveal">
     <div>
       <div class="panel-head"><div><h3>Difference from the reference model</h3><p id="metric-help"></p></div>
@@ -456,15 +455,15 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
       <p class="note" id="baseline-note"></p>
     </div>
     <aside class="reading">
-      <p class="pull">The rule alone: AUC <em data-k="auc-policy"></em>. The ship alone: <span data-k="auc-structure"></span>. Together: <em data-k="auc-ref"></em>.</p>
-      <p><b>Policy</b> means sex, child and their interaction. <b>Structure</b> means class, fare per person, port of embarkation and family size. The rule carries most of the signal; the ship adds to it.</p>
-      <p>A random forest, free to find any pattern, reaches <span data-k="auc-rf"></span>: a difference of <span data-k="rf-diff"></span>. More complexity adds nothing reliable. It learns the same decision.</p>
+      <p class="pull">Demographic terms: AUC <em data-k="auc-policy"></em>. Structural terms: <span data-k="auc-structure"></span>. Together: <em data-k="auc-ref"></em>.</p>
+      <p><b>Policy</b> is the model label for sex, child, their interaction and a missing-age flag—not an identified policy effect. <b>Structure</b> means class, fare per person, port of embarkation and family size. These comparisons assess prediction, not the causes of survival.</p>
+      <p>The random forest reaches <span data-k="auc-rf"></span>: a difference of <span data-k="rf-diff"></span>. This comparison does not demonstrate a reliable improvement over the reference; it does not establish that the models are equivalent.</p>
     </aside>
   </div>
 </section>
 
 <section class="chapter" id="proxy" aria-labelledby="proxy-title">
-  <div class="chapter-head reveal"><div><div class="chapter-number">03 / Remove the attribute, keep the bias</div><h2 id="proxy-title">Delete the column. <em>The rule stays.</em></h2></div><p>A common reflex is to drop the protected attribute and call the model neutral. Here the observed survival gap between recorded women (<span data-k="obs-female"></span>) and men (<span data-k="obs-male"></span>) is <span data-k="obs-gap"></span>. How much of it does each model still reproduce, using out-of-fold predictions?</p></div>
+  <div class="chapter-head reveal"><div><div class="chapter-number">03 / Attribute removal and proxies</div><h2 id="proxy-title">Remove a feature. <em>Related signals remain.</em></h2></div><p>Removing sex from the predictors does not necessarily remove information associated with it. Here the observed survival gap between recorded women (<span data-k="obs-female"></span>) and men (<span data-k="obs-male"></span>) is <span data-k="obs-gap"></span>. How much of it does each model reproduce, using out-of-fold predictions?</p></div>
   <div class="panel grid-wide reveal">
     <div>
       <h3>Share of the observed female–male gap reproduced</h3>
@@ -472,7 +471,7 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
     </div>
     <aside class="reading">
       <p class="pull">Without sex: <em data-k="gap-blind"></em>. Add one title: <em data-k="gap-title"></em>.</p>
-      <p>A passenger’s title encodes recorded sex and, for boys, age. It carries the rule straight back in. The sex-blind model is also worse (AUC <span data-k="auc-blind"></span>), while the title model is statistically indistinguishable from the reference (<span data-k="title-diff"></span>).</p>
+      <p>Title is a strong proxy for recorded sex and also carries age-related information. The sex-blind model has a lower AUC (<span data-k="auc-blind"></span>). The title model’s difference from the reference has an interval that includes zero (<span data-k="title-diff"></span>); this is not evidence of equivalence or proof of a historical mechanism.</p>
       <ul class="titles" aria-label="Titles used as features"><li>Mr</li><li>Mrs</li><li>Miss</li><li>Master</li></ul>
     </aside>
   </div>
@@ -483,17 +482,17 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
       <div class="arrow" aria-hidden="true">→</div>
       <div><span class="big-num accent" data-k="rec-with"></span><small>The same columns plus title<br><span data-k="rec-with-range"></span></small></div>
     </div>
-    <div class="callout">In HR data the proxies are rarely this blunt, but they are there: part-time status, career breaks, job family, first names, site. Test whether the remaining columns can predict the protected attribute before trusting that it is gone.</div>
+    <div class="callout">A proxy test asks whether the remaining columns contain information associated with an omitted attribute. It does not by itself establish harmful discrimination, or determine whether using a feature is appropriate. The separate synthetic example explores this distinction under specified assumptions.</div>
   </div>
 </section>
 
 <section class="chapter" id="audit" aria-labelledby="audit-title">
-  <div class="chapter-head reveal"><div><div class="chapter-number">04 / Audit it like an HR system</div><h2 id="audit-title">Calibrated for everyone. <em>Fair to no one?</em></h2></div><p>Treat the reference model as if it were a selection tool: anyone with a predicted probability of 0.5 or more is “selected”. Then run the checks an HR analytics team would run, on out-of-fold mean probabilities. Cells with a denominator below 20 are suppressed.</p></div>
+  <div class="chapter-head reveal"><div><div class="chapter-number">04 / Compare group diagnostics</div><h2 id="audit-title">One model. <em>Several diagnostics.</em></h2></div><p>Apply an illustrative fixed threshold of 0.5 to out-of-fold mean probabilities from the reference model. A “positive” means predicted survival, not a recommendation to select or rescue anyone. These descriptive checks answer different questions; cells with a denominator below 20 are suppressed.</p></div>
   <div class="panel reveal">
     <div class="audit-head">
-      <div><b class="accent" data-k="ir-male2"></b>Impact ratio for men at 0.5 (95% CI <span data-k="ir-male-ci"></span>). In the record itself it was <span data-k="lir-male"></span>: the threshold sharpened the rule.</div>
-      <div><b data-k="cal-pair"></b>Calibration ratio, women / men: observed rate divided by mean prediction. Both groups are well calibrated.</div>
-      <div><b data-k="fpr-pair"></b>False-positive rate, women / men. Calibration and equal error rates cannot both hold when base rates differ this much.</div>
+      <div><b class="accent" data-k="ir-male2"></b>Predicted-positive rate ratio for men at 0.5 (95% CI <span data-k="ir-male-ci"></span>). The survival-rate ratio in the record is <span data-k="lir-male"></span>. These are different quantities.</div>
+      <div><b data-k="cal-pair"></b>Observed rate divided by mean prediction, women / men. Agreement in group averages does not establish calibration across the probability range.</div>
+      <div><b data-k="fpr-pair"></b>False-positive rate, women / men. Agreement in group averages can coexist with different error rates; neither diagnostic alone establishes fairness.</div>
     </div>
     <div class="tabs seg" role="tablist" aria-label="Audit grouping">
       <button type="button" role="tab" id="tab-sex" aria-controls="audit-panel" aria-selected="true" data-grouping="Sex">By sex</button>
@@ -503,22 +502,22 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
     <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Model at 0.5</li><li><span class="key hollow" style="--c:var(--cp-text)"></span>Historical record</li><li><span class="key line"></span>Reference line</li></ul>
     <div id="audit-panel" role="tabpanel" aria-labelledby="tab-sex" tabindex="0"><div class="multiples" id="audit-grid"></div></div>
     <div class="grid-2" style="margin-top:28px">
-      <div class="callout"><b>The four-fifths rule of thumb.</b> US federal selection guidelines (1978) treat a selection rate below 80% of the highest group’s as evidence of possible adverse impact. Report the ratio with an interval, not as a pass/fail light. Cited as context for analysts, not legal advice.</div>
-      <div class="callout sea"><b>The impossibility.</b> When base rates differ, a model cannot be calibrated within groups <em>and</em> have equal false-positive and false-negative rates (Kleinberg, Mullainathan &amp; Raghavan, 2016; Chouldechova, 2017). An audit has to say which property it prioritises, and why.</div>
+      <div class="callout"><b>The four-fifths rule in employment.</b> US federal selection guidelines (1978) use a selection rate below 80% of the highest group’s as an indicator of possible adverse impact. Here the ratio is descriptive; an employment heuristic does not establish discrimination or fairness in historical survival data. This is not a legal assessment.</div>
+      <div class="callout sea"><b>Different criteria, different questions.</b> Calibration, predictive parity and equal error rates are different properties. Formal incompatibility results rely on specified definitions and assumptions (Kleinberg, Mullainathan &amp; Raghavan, 2016; Chouldechova, 2017). The mean ratios here do not establish calibration across the probability range.</div>
     </div>
   </div>
 </section>
 
 <section class="chapter" id="promotion" aria-labelledby="promotion-title">
-  <div class="chapter-head reveal"><div><div class="chapter-number">05 / If this were promotion data</div><h2 id="promotion-title">Plant a bias. <em>See where it goes.</em></h2></div><p>On real data the truth is unknown. So the same audit runs on a synthetic promotion history of <span data-k="sim-n"></span> invented employees, generated with a <b>known</b> penalty: women <span data-k="inj-woman"></span> log-odds, regional staff <span data-k="inj-regional"></span>, and part-time work <span data-k="inj-part"></span>, no effect at all.</p></div>
+  <div class="chapter-head reveal"><div><div class="chapter-number">05 / Separate synthetic example</div><h2 id="promotion-title">Plant a bias. <em>See where it goes.</em></h2></div><p>This separate example specifies a generating process for <span data-k="sim-n"></span> invented employees. It introduces a <b>known</b> promotion penalty: women <span data-k="inj-woman"></span> log-odds, regional staff <span data-k="inj-regional"></span>, and part-time work <span data-k="inj-part"></span>, no direct effect. It tests methods under these assumptions—not a claim about real workplaces or historical passengers.</p></div>
   <div class="synthetic-band reveal" role="note"><span class="badge sea">SYNTHETIC DATA</span><span data-k="sim-warning"></span></div>
   <div class="grid-2 reveal">
     <div class="panel">
-      <h3>Historical decisions vs a merit-only counterfactual</h3>
+      <h3>Simulated decisions, with and without the penalties</h3>
       <p class="note" style="margin-top:0">Promotion-rate impact ratios with 95% Katz intervals; the same random draws, with the penalties switched off.</p>
-      <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Historical decisions</li><li><span class="key hollow" style="--c:var(--cp-text)"></span>Merit only</li></ul>
-      <div id="sim-impact-chart" class="rc" role="figure" aria-label="Impact ratios for women and regional staff, historical versus merit only"></div>
-      <p class="note">Historically <span data-k="hist-w"></span> of women and <span data-k="hist-m"></span> of men were promoted (ratio <span data-k="hist-ir"></span>). On merit alone: <span data-k="merit-w"></span> and <span data-k="merit-m"></span> (ratio <span data-k="merit-ir"></span>).</p>
+      <ul class="legend"><li><span class="key" style="--c:var(--cp-accent)"></span>Simulated decisions</li><li><span class="key hollow" style="--c:var(--cp-text)"></span>Penalties removed</li></ul>
+      <div id="sim-impact-chart" class="rc" role="figure" aria-label="Synthetic promotion-rate ratios for women and regional staff, with penalties applied or removed"></div>
+      <p class="note">With the simulated penalties, <span data-k="hist-w"></span> of women and <span data-k="hist-m"></span> of men were promoted (ratio <span data-k="hist-ir"></span>). Remove the penalties: <span data-k="merit-w"></span> and <span data-k="merit-m"></span> (ratio <span data-k="merit-ir"></span>).</p>
     </div>
     <div class="panel">
       <h3>What the models recover</h3>
@@ -537,20 +536,20 @@ footer { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 24px; border
     <aside class="reading">
       <p class="pull">The gap shrinks. <em>The bias moves.</em></p>
       <p>Drop gender and the predicted gap almost vanishes. But the gender-blind model now penalises <b>part-time work</b>, <span data-k="pt-blind"></span> (95% CI <span data-k="pt-blind-ci"></span>), although its true effect is zero. Why: <span data-k="pt-w"></span> of the synthetic women work part-time, against <span data-k="pt-m"></span> of the men.</p>
-      <p>Even with no title-like proxy, the remaining columns predict gender with AUC <span data-k="sim-auc"></span>. Weak proxies still move bias. A part-time employee is now marked down for something that never mattered.</p>
+      <p>In this simulation, the remaining columns predict gender with AUC <span data-k="sim-auc"></span>. An association with part-time work emerges despite its zero direct effect in the generating process. This demonstrates a possible failure mode under the chosen assumptions, not its prevalence in real workplaces.</p>
     </aside>
   </div>
   <article class="memo reveal" aria-labelledby="memo-title">
     <dl class="memo-meta"><dt>To</dt><dd>People-analytics and HR data teams</dd><dt>Re</dt><dd>Before you train on historical decisions</dd><dt>Status</dt><dd>Checklist, not legal advice</dd></dl>
     <h3 id="memo-title">An audit memo in eight lines</h3>
     <ol class="checklist">
-      <li><b>Ask what decision produced the label.</b>Who decided, under which policy, and did it vary by manager, site or period?</li>
+      <li><b>Ask what the label measures.</b>Separate recorded outcomes, human assessments and decisions; investigate how each was produced.</li>
       <li><b>Describe before you predict.</b>Outcome rates by group, with denominators and intervals.</li>
-      <li><b>Check who is missing.</b>Missing data that falls unevenly is a fairness finding in its own right.</li>
+      <li><b>Check who is missing.</b>Uneven missingness is a risk to investigate, not proof of unfairness by itself.</li>
       <li><b>Test proxies directly.</b>Can the other columns predict the protected attribute? Report that AUC.</li>
       <li><b>Don’t remove the attribute and declare victory.</b>Measure how much of the gap a blind model still reproduces.</li>
-      <li><b>Report impact ratios with intervals.</b>Against the 0.8 rule of thumb, and for the record as well as the model.</li>
-      <li><b>Check calibration and error rates per group.</b>Say which one you prioritise when they conflict.</li>
+      <li><b>Report rate ratios with intervals.</b>Explain the reference group and use employment heuristics only in an appropriate decision context.</li>
+      <li><b>Check calibration and error rates per group.</b>Do not mistake agreement in averages for calibration across the probability range.</li>
       <li><b>Suppress small cells.</b>Here, any rate with a denominator below 20 is not shown.</li>
     </ol>
   </article>
@@ -803,7 +802,7 @@ function drawMissing(){
 const METRIC={roc_auc:{name:"AUC",better:"higher",help:"AUC: higher ranks survivors above non-survivors more often. A difference below zero is worse than the reference.",d:3},
   brier:{name:"Brier score",better:"lower",help:"Brier score: lower is better. A difference above zero is worse than the reference.",d:3},
   log_loss:{name:"Log loss",better:"lower",help:"Log loss: lower is better. A difference above zero is worse than the reference.",d:3}};
-const MODEL_ORDER=[["Policy + structure","Reference: rule + ship"],["Policy only","Sex, child, interaction"],["Structure only","Class, fare, port, family"],["Sex-blind","Everything except sex"],["Sex-blind + title","Sex-blind, plus Mr/Mrs/Miss/Master"],["Random forest","Benchmark, all columns"]];
+const MODEL_ORDER=[["Policy + structure","Reference: combined features"],["Policy only","Sex, child, interaction, missing age"],["Structure only","Class, fare, port, family"],["Sex-blind","Reference without sex terms"],["Sex-blind + title","Sex-blind, plus title terms"],["Random forest","Benchmark, combined features"]];
 function drawModel(metric){
   const M=METRIC[metric],rows=A.model_comparison.filter(r=>r.metric===metric);
   const shown=MODEL_ORDER.map(([m])=>find(rows,r=>r.model===m));
@@ -832,15 +831,15 @@ function drawProxy(){
 
 /* ---------- Chapter 4: audit ---------- */
 const AUDIT_PANELS=[
-  {key:"cal",title:"Calibration",help:"Observed rate (hollow) and mean predicted probability (filled). Close together means calibrated.",scale:PCT_TICKS,
+  {key:"cal",title:"Agreement in group averages",help:"Observed rate (hollow) and mean prediction (filled). This does not establish calibration across probability levels.",scale:PCT_TICKS,
     mark:r=>({marks:[{est:r.base_rate,color:C.text,shape:"hollow"},{est:r.mean_predicted,color:C.accent,text:pct(r.mean_predicted,0)}],end:["×"+num(r.calibration_ratio,2),"obs / pred"]})},
-  {key:"sel",title:"Selection rate",help:"Share predicted to survive (p ≥ 0.5), with 95% Wilson interval; hollow is the recorded outcome rate.",scale:PCT_TICKS,
+  {key:"sel",title:"Predicted-positive rate",help:"Share predicted to survive (p ≥ 0.5), with 95% Wilson interval; hollow is the recorded outcome rate.",scale:PCT_TICKS,
     mark:r=>({marks:[{est:r.base_rate,color:C.text,shape:"hollow"},{est:r.selection_rate,lo:r.selection_lower,hi:r.selection_upper,color:C.accent,text:pct(r.selection_rate,0)}],end:[thousands(r.n),"n"]})},
-  {key:"ir",title:"Impact ratio",help:"Selection rate relative to the highest group, 95% Katz interval. Line at 0.8: the four-fifths rule of thumb.",scale:{domain:[0,1.2],ticks:[0,.4,.8,1.2],tick:v=>num(v,1)},refs:[{v:.8,strong:true},{v:1}],
+  {key:"ir",title:"Predicted-positive rate ratio",help:"Rate relative to the highest group, 95% Katz interval. The 0.8 line is an employment-context heuristic, not a historical fairness test.",scale:{domain:[0,1.2],ticks:[0,.4,.8,1.2],tick:v=>num(v,1)},refs:[{v:.8,strong:true},{v:1}],
     mark:r=>({marks:[{est:Math.min(r.label_impact_ratio,1.2),color:C.text,shape:"hollow"},{est:Math.min(r.impact_ratio,1.2),lo:r.ir_lower,hi:Math.min(r.ir_upper,1.2),color:r.impact_ratio<.8?C.accent:C.text,text:num(r.impact_ratio,r.impact_ratio<.1?3:2)}],end:[num(r.label_impact_ratio,2),"record"]})},
-  {key:"tpr",title:"True-positive rate",help:"Of those who survived, the share the model selected.",scale:PCT_TICKS,metric:"tpr"},
-  {key:"fpr",title:"False-positive rate",help:"Of those who died, the share the model selected.",scale:PCT_TICKS,metric:"fpr"},
-  {key:"ppv",title:"Positive predictive value",help:"Of those selected, the share who survived.",scale:PCT_TICKS,metric:"ppv"}];
+  {key:"tpr",title:"True-positive rate",help:"Of those who survived, the share predicted to survive.",scale:PCT_TICKS,metric:"tpr"},
+  {key:"fpr",title:"False-positive rate",help:"Of those who died, the share predicted to survive.",scale:PCT_TICKS,metric:"fpr"},
+  {key:"ppv",title:"Positive predictive value",help:"Of those predicted to survive, the share who survived.",scale:PCT_TICKS,metric:"ppv"}];
 function errorMark(r,m){
   const den=r[m+"_denominator"];
   if(r[m]==null)return {suppressed:`n<20 (n = ${thousands(den)})`,end:["—","suppressed"]};
@@ -883,7 +882,7 @@ function drawSim(){
     rows.push({label,sub,marks:[{est:r.injected,shape:"diamond",color:"var(--cp-sea)",title:"Injected truth"},{est:r.estimate,lo:r.lower,hi:r.upper,color:c,shape:ex?"":"hollow",text:num(r.estimate,2)}],end:[`truth ${num(r.injected,1)}`,""]});
   }
   rangeChart($("sim-coef-chart"),{domain:[-1.2,.4],ticks:[-1.2,-.8,-.4,0,.4],tick:v=>num(v,1),refs:[{v:0,strong:true}],caption:"Log-odds (below zero = penalty)",rows});
-  const src=[["Historical decisions","The recorded decisions",C.text],["Merit-only counterfactual","Penalties switched off",C.muted],["Gender visible","Gender-visible model",C.text],["Gender-blind","Gender-blind model",C.accent]];
+  const src=[["Historical decisions","Simulated decisions",C.text],["Merit-only counterfactual","Penalties switched off",C.muted],["Gender visible","Gender-visible model",C.text],["Gender-blind","Gender-blind model",C.accent]];
   rangeChart($("sim-gap-chart"),{domain:[-.15,.05],ticks:[-.15,-.1,-.05,0,.05],tick:v=>num(100*v,0),refs:[{v:0,strong:true}],caption:"Women minus men, percentage points",
     rows:src.map(([s,label,c])=>{const r=find(A.sim_gap,x=>x.source===s);return {label,marks:[{bar:true,est:r.gap,color:c,text:num(100*r.gap,1)}],end:[`${pct(r.women_mean,1)} / ${pct(r.men_mean,1)}`,"women / men"]};})});
 }
@@ -898,7 +897,7 @@ function drawRates(){
     return {label:CLASS_NAME[String(c)],sub:`${thousands(f.n)} female · ${thousands(m.n)} male`,link:[m.posterior_mean,f.posterior_mean],
       marks:[{est:f.posterior_mean,lo:f.lower,hi:f.upper,color:C.accent,text:pct(f.posterior_mean,0)},{est:m.posterior_mean,lo:m.lower,hi:m.upper,color:C.text,text:pct(m.posterior_mean,0),below:true}]};})});
   const f3=get("female",3),m1=get("male",1);
-  $("rate-reading").textContent=`Recorded females in third class: ${pct(f3.posterior_mean,0)} (95% CrI ${pct(f3.lower,0)}–${pct(f3.upper,0)}). Recorded males in first class: ${pct(m1.posterior_mean,0)} (${pct(m1.lower,0)}–${pct(m1.upper,0)}). Class mattered, but within the rule.`;
+  $("rate-reading").textContent=`Recorded females in third class: ${pct(f3.posterior_mean,0)} (95% CrI ${pct(f3.lower,0)}–${pct(f3.upper,0)}). Recorded males in first class: ${pct(m1.posterior_mean,0)} (${pct(m1.lower,0)}–${pct(m1.upper,0)}). These are descriptive group summaries, not causal effects.`;
 }
 function drawCoefficients(){
   const rows=ED().coefficients.filter(r=>r.term!=="intercept");

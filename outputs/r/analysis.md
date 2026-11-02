@@ -295,7 +295,7 @@ Large differences in these observed records do not identify mechanisms.
 The posterior intervals are conditional on the binomial model and prior,
 not a correction for missing records, selection, dependence, or confounding.
 
-## 6. Audit: what a model learns from historical decisions
+## 6. Feature comparisons and group diagnostics
 
 `R/audit.R` mirrors `Python/audit.py`. Five Laplace-approximated Bayesian
 logistic specifications (policy terms, structural terms, both, sex-blind, and
@@ -303,6 +303,12 @@ sex-blind plus title), a prevalence baseline, and a 300-tree random forest are
 refitted inside each of the 20 x 5 committed grouped folds in
 `data/repeated_cv.csv`. Differences from the reference *Policy + structure*
 model use Nadeau-Bengio corrected resampled t intervals.
+
+"Policy" names a demographic feature set, not an identified policy effect.
+The group-average observed/predicted ratios do not establish calibration across
+the probability range or fairness. The synthetic promotion analysis below is
+a separate demonstration under specified assumptions, not an analogy about
+historical survival or evidence about real employees.
 
 
 ``` r

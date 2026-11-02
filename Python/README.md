@@ -1,4 +1,4 @@
-# Python / The Rule in the Data
+# Python / Patterns in the Record
 
 This is the Python reference implementation. The R edition reproduces every
 deterministic table, and `scripts/check_parity.py` verifies that they match.
@@ -39,14 +39,14 @@ This module uses the 1,048 / 261 holdout.
 
 ### `audit.py`: the people-science audit
 
-- **Policy-recovery models:** policy, structure, combined, sex-blind and
+- **Feature-set comparisons:** policy, structure, combined, sex-blind and
   sex-blind + title. All are Laplace logistic models, with a random-forest
-  benchmark.
+  benchmark. "Policy" names a demographic feature set, not a recovered policy.
 - **Evaluation:** 20 × 5 repeated grouped cross-validation with Nadeau–Bengio
   paired intervals.
 - **Proxy tests:** the proxy gap and sex recovery.
-- **Fairness audit:** impact ratios, per-group calibration and error rates,
-  with small cells suppressed.
+- **Group diagnostics:** rate ratios, agreement in group averages and error
+  rates, with small cells suppressed. Average agreement is not full calibration.
 - **Descriptive history:** the policy groups, child cutoffs, boat side and
   missing age.
 - **Synthetic simulation:** checks the audit against the known injected bias.
@@ -67,8 +67,8 @@ suppressed or undefined.
 ## Limits
 
 - **Associations, not causes.** Coefficients and rules describe the record,
-  not why anyone lived or died. The models learn a historical decision; they
-  are not a guide to who "should" be selected.
+  not why anyone lived or died. Predictions do not identify a historical
+  decision rule and are not a guide to who "should" be selected.
 - **Laplace intervals.** Intervals are approximate and marginal; there are no
   MCMC draws.
 - **Forest parity.** Forest results differ between languages by design.

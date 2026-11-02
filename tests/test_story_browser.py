@@ -166,7 +166,7 @@ class StoryTests(unittest.TestCase):
                 self.assertTrue(bridge.is_visible())
                 title = page.locator("#people-analytics-title")
                 self.assertEqual(title.evaluate("el => el.tagName"), "H2")
-                self.assertEqual(title.inner_text(), "The label is a record of a decision.")
+                self.assertEqual(title.inner_text(), "Predicting an outcome is not explaining it.")
                 self.assertIn(
                     "The findings remain specific to this incomplete historical sample",
                     bridge.inner_text(),
@@ -182,15 +182,40 @@ class StoryTests(unittest.TestCase):
                 )
                 page.close()
 
-    def test_hero_is_a_memorial_not_a_game(self):
+    def test_hero_acknowledges_history_without_memorial_or_scoring_claims(self):
         page = self.open_story(1280, "reduce")
         aside = page.locator(".hero > .aside").inner_text()
-        self.assertIn("NOT A SURVIVAL GAME", aside.upper())
         self.assertIn("1,500", aside)
+        self.assertIn("people, families", aside)
+        self.assertIn("not why any individual survived or died", aside)
+        for wording in ("in memory of", "not a survival game", "scores no one"):
+            self.assertNotIn(wording, aside.lower())
+        self.assertIn("Patterns", page.locator("h1").inner_text())
         credit = json.loads((ROOT / "data" / "provenance.json").read_text(encoding="utf-8"))
         self.assertIn(credit["required_credit"], aside)
         self.assertIn(credit["required_credit"], page.locator("footer").inner_text())
         self.assertEqual(page.locator("input[type=text], input[type=number]").count(), 0)
+
+    def test_narrative_separates_historical_prediction_from_synthetic_auditing(self):
+        page = self.open_story(1280, "reduce")
+        bridge = page.locator("#people-analytics-bridge").inner_text()
+        self.assertIn("separate, explicitly synthetic promotion example", bridge)
+        self.assertIn("not a conclusion about real employees or organizations", bridge)
+        self.assertIn(
+            "not establish calibration across the probability range",
+            page.locator("#audit").inner_text(),
+        )
+        self.assertIn("not establish that the models are equivalent", page.locator("#model").inner_text())
+        self.assertIn("not an identified policy effect", page.locator("#model").inner_text())
+        body = page.locator("main").inner_text().lower()
+        for wording in (
+            "learns the rule", "learns the decision", "hr policies work the same way",
+            "both groups are well calibrated", "if this were promotion data",
+        ):
+            self.assertNotIn(wording, body)
+        self.assertEqual(page.locator(".hero-voyage .voyage-liner").count(), 1)
+        self.assertEqual(page.locator("#deck .boat").count(), 20)
+        self.assertEqual(page.errors, [])
 
     def test_every_chapter_renders_numbers_from_the_committed_outputs(self):
         policy, sides, missing = table("policy_groups.csv"), table("boat_side.csv"), table("missing_age.csv")

@@ -1,12 +1,14 @@
 # Analysis contract
 
-This is a historical observational case study framed as a people-analytics
-audit. The question is: **what does a model learn when it is trained on the
-outcome of a human decision rule?**
+This is a historical observational case study. The question is: **what do
+descriptive patterns, predictive comparisons and uncertainty tell us about
+the available records, and what can they not establish?**
 
-The work makes no causal claims. It does not prioritise rescues and does not
-score individuals. The data are the 1,309 passenger records in titanic3; crew
-are not included.
+The work makes no causal claims. Models generate record-level predictions for
+evaluation, not rescue prioritisation or judgments about individuals. The data
+are the 1,309 passenger records in titanic3; crew are not included. A separate
+synthetic promotion example tests selected audit methods under specified
+generating assumptions; it is not evidence about real employees.
 
 ## Data
 
@@ -37,7 +39,11 @@ are not included.
   - the embarkation mode, with ties broken alphabetically;
   - means and sample standard deviations, where a zero SD is replaced by 1.
 
-## Policy-recovery models
+## Feature-set comparison models
+
+The exported "Policy" labels name demographic feature sets, not an identified
+decision policy or its causal effect. Feature-set comparisons assess prediction;
+they do not separate the causes of survival.
 
 Every model is a Bayesian logistic regression fitted by Laplace approximation:
 
@@ -90,15 +96,17 @@ sex × class. For each group it reports:
 
 Any rate with a denominator below **20** is suppressed.
 
-The four-fifths heuristic and the Chouldechova impossibility result
-(calibration and equal error rates cannot hold together when base rates differ)
-are context for analysts, not legal tests. The identity
+The observed-rate / mean-prediction ratio checks agreement in group averages,
+not calibration across the probability range. The four-fifths heuristic is
+employment context, not a fairness test for historical survival records.
+Formal incompatibility results depend on specified definitions and assumptions
+and are not established by agreement in group averages. The identity
 FPR = p/(1−p) · (1−PPV)/PPV · TPR is unit-tested.
 
 ## Descriptive history
 
-- **The policy:** survival for women and children vs men, by class.
-- **Child cutoffs:** the policy groups recomputed with cutoffs at 12, 14, 16
+- **Recorded groups:** survival for women and children vs men, by class.
+- **Child cutoffs:** the descriptive groups recomputed with cutoffs at 12, 14, 16
   and 18.
 - **Boat side:** the share of adult men among those boarded on each side.
 - **Missing age:** the share of missing ages by class.
@@ -169,6 +177,7 @@ These lenses use the same holdout split as before and per-person fare.
   deterministic table between R and Python. The random forests are excluded.
 - **Coverage.** The source is a curated, incomplete record: passengers only,
   with sex recorded as a binary and missing ages concentrated in third class.
-- **Interpretation.** The patterns describe how a historical decision played
-  out; they do not explain any individual's fate. The HR analogy is offered as
-  a teaching device, not as evidence about any real organisation.
+- **Interpretation.** The patterns describe associations in the available
+  records; they do not identify policy enforcement, causal mechanisms or any
+  individual's fate. The synthetic promotion example is a separate
+  demonstration, not a direct analogy or evidence about real organizations.

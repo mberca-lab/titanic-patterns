@@ -1,49 +1,50 @@
-# Titanic / The Rule in the Data
+# Titanic / Patterns in the Record
 
-### What a model learns when it is trained on a historical decision
+### What prediction can—and cannot—tell us
 
-On 15 April 1912 about 1,500 people died when the Titanic sank. Who reached a
-lifeboat was shaped by a human rule, *women and children first*, which was
-applied unevenly by class and by side of the ship.
+The Titanic disaster claimed around 1,500 lives on 15 April 1912. Behind these
+historical records were people, families, and circumstances that no statistical
+model can fully represent.
 
-This project treats that record the way a **people-analytics team should treat
-past promotion, hiring or performance decisions**. Train a model on historical
-outcomes and it learns the decision rule that produced them, not merit or worth.
-Remove the protected attribute and a proxy can carry the rule straight back in.
+**Predicting an outcome is not explaining it.** This historical observational
+study separates descriptive patterns, predictive performance and uncertainty.
+It does not identify a policy's effect or explain why any individual survived
+or died.
 
 **A real, public-data case study in R and Python.** It covers 1,309 titanic3
-passengers, uses repeated grouped cross-validation, and runs an HR-style
-fairness audit. A synthetic promotion simulation with a known, injected bias
-checks whether the audit catches what we planted.
+passengers, uses repeated grouped cross-validation, and compares group-level
+diagnostics. A **separate synthetic promotion example** explores selected audit
+methods under specified assumptions, including deliberately introduced
+disparities. It is not evidence about real employees or organizations.
 
-![The Rule in the Data: memorial hero and the first chart, women and children vs men by class](outputs/story-preview.png)
+![Patterns in the Record: historical context and survival comparisons by recorded group and class](outputs/story-preview.png)
 
 **[Explore the interactive story](https://mberca.github.io/titanic-patterns/)** ·
 **[Start in R](R/README.md)** · **[Python edition](Python/README.md)** ·
 **[Methodology](METHODOLOGY.md)** · **[Data guide](data/README.md)**
 
-> Not a survival game. No individual names are published, and nothing here
-> scores or ranks people. Associations are not causes.
+> The source excludes crew. Models produce record-level predictions for
+> evaluation, not recommendations about people. Associations are not causes.
 
 ## Five findings
 
 | # | Question | What the evidence shows |
 |---|---|---|
-| 1 | **Was there a rule?** | Women and children: 70% survived. Men: 17%. The rule weakened with class: 97% in first class, 46% in third. |
-| 2 | **Was it applied evenly?** | Among recorded lifeboat occupants, adult men made up **41%** of starboard boats but **12%** of port boats. The officers on each side read the same order differently. |
-| 3 | **What does a model learn?** | The policy terms alone reach a cross-validated AUC of 0.79. Ship structure alone (class, fare, port) reaches 0.69. Together they reach **0.85**. A random forest adds nothing reliable (difference 0.00, 95% CI −0.01 to 0.01). |
-| 4 | **Does removing sex remove the bias?** | Without sex terms the model reproduces 14% of the observed sex gap. Add the passenger's **title** and it reproduces **98%**. Title recovers recorded sex with AUC 0.9999. |
-| 5 | **Would an HR audit catch it?** | The impact ratio for men is 0.035, far below the four-fifths heuristic. The model is calibrated within each group, yet false-positive rates differ: 0.57 for women vs 0.006 for men. Both cannot be equalised at once. |
+| 1 | **How do recorded groups differ?** | Women and children: 70% survived. Men: 17%. Among women and children, 97% survived in first class and 46% in third. These are descriptive comparisons, not policy-effect estimates. |
+| 2 | **Who appears in the boat records?** | Among passengers with recorded boats, those classified as adult men made up **41%** on starboard and **12%** on port. Access, timing, missing ages and recording limit interpretation. |
+| 3 | **How do feature sets compare?** | Demographic terms reach a cross-validated AUC of 0.79; structural terms reach 0.69; together, **0.85**. The random-forest difference has an interval spanning zero (95% CI −0.01 to 0.01), not evidence of equivalence. |
+| 4 | **What information remains after removing sex?** | Without sex terms the model reproduces 14% of the observed sex gap. Add the passenger's **title** and it reproduces **98%**. Title recovers recorded sex with AUC 0.9999; this alone does not establish discrimination or a historical mechanism. |
+| 5 | **What do group diagnostics reveal?** | The male-to-female predicted-positive rate ratio at 0.5 is 0.035. Observed rates and mean predictions are close within each sex group, yet false-positive rates differ: 0.57 for women vs 0.006 for men. Agreement in averages does not establish calibration across the probability range or fairness. |
 
-### If this were promotion data
+### A separate synthetic promotion example
 
 The synthetic simulation contains 5,000 employees and is clearly labelled as
 synthetic. It injects a −0.70 log-odds penalty for women and a −0.50 penalty for
 regional staff. Part-time status has **no** effect.
 
-- **Historical decisions:** promotion rates are 12.4% for women and 21.4% for
+- **Simulated decisions:** promotion rates are 12.4% for women and 21.4% for
   men, an impact ratio of 0.58.
-- **Merit-only counterfactual:** the rates become 23.2% vs 23.6%, an impact
+- **Penalties removed:** the rates become 23.2% vs 23.6%, an impact
   ratio of 0.98.
 - **Gender-visible model:** it recovers the planted penalty, −0.68 with a 95% CI
   of −0.89 to −0.46.
@@ -51,7 +52,8 @@ regional staff. Part-time status has **no** effect.
   penalises **part-time work** (−0.29, CI excludes 0), which had no true effect.
   The reason is that 29% of women and 4% of men in the simulation are part-time.
 
-The bias did not disappear. It moved to a proxy.
+This illustrates one possible proxy failure mode under the chosen generating
+process, not its prevalence in real workplaces.
 
 ## Find your way
 
@@ -67,19 +69,19 @@ The bias did not disappear. It moved to a proxy.
 
 ## What makes this more than a Titanic accuracy exercise
 
-- **A decision lens.** Policy-only, structure-only and combined models separate
-  the rule from the ship. Sex-blind and proxy tests show how the rule survives
-  removal.
+- **Feature comparisons.** Demographic, structural and combined models assess
+  predictive information, not separate causal contributions. The exported
+  "Policy" model labels are shorthand for demographic feature sets.
 - **Honest uncertainty.** The models run 20 × 5 repeated cross-validation,
   grouped by shared ticket. Model differences use paired **Nadeau–Bengio**
   corrected intervals rather than one lucky split.
-- **An audit an HR team would recognise:**
+- **Multiple group diagnostics:**
   - impact ratios with Katz intervals;
-  - per-group calibration;
+  - agreement between group outcome rates and mean predictions;
   - TPR, FPR and PPV with Wilson intervals;
   - suppression of any cell with a denominator below 20.
-- **A known-truth check.** The synthetic simulation tests whether the methods
-  recover a bias we planted ourselves.
+- **A specified-process check.** The separate synthetic simulation tests the
+  methods against deliberately introduced disparities.
 - **Two languages, one answer.** R and Python share every split and fold, and a
   parity script checks that the Bayesian fits and audit tables agree. The random
   forests are deliberately excluded, because their implementations differ.
@@ -119,9 +121,11 @@ analytics, external fonts or CDN.
 - The source records sex as a binary.
 - Coefficients and rules describe associations within this record. They do not
   explain anyone's fate.
-- The four-fifths rule and the calibration/error-rate impossibility are cited as
-  **context for analysts**, not legal advice.
-- The simulation is synthetic by design. Its value is that the truth is known.
+- Employment heuristics do not establish fairness in historical survival data.
+  Formal calibration/error-rate trade-offs depend on their definitions and
+  assumptions; group-average agreement is not a full calibration test.
+- The simulation is synthetic by design. Its generating assumptions are known,
+  but it does not establish performance in real organizations.
 - Read the [full methodology](METHODOLOGY.md) before reusing any part of this.
 
 ## Repository map
