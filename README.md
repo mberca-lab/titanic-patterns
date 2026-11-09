@@ -17,7 +17,7 @@ disparities. It is not evidence about real employees or organizations.
 
 ![Patterns in the Record: historical context and survival comparisons by recorded group and class](outputs/story-preview.png)
 
-**[Explore the interactive story](https://mbc81.github.io/titanic-patterns/)** ·
+**[Explore the interactive story](https://mberca-lab.github.io/titanic-patterns/)** ·
 **[Start in R](R/README.md)** · **[Python edition](Python/README.md)** ·
 **[Methodology](METHODOLOGY.md)** · **[Data guide](data/README.md)**
 
@@ -57,7 +57,7 @@ process, not its prevalence in real workplaces.
 
 | Your goal | Start here |
 |---|---|
-| See the visual story without installing anything | [Interactive story](https://mbc81.github.io/titanic-patterns/) |
+| See the visual story without installing anything | [Interactive story](https://mberca-lab.github.io/titanic-patterns/) |
 | Run or read the R edition | [`R/`](R/) · [`titanic-patterns.Rproj`](titanic-patterns.Rproj) |
 | Run or read the Python edition | [`Python/`](Python/) · [Executed notebook](notebooks/01_titanic_python.ipynb) |
 | Understand where the data came from | [Data guide](data/README.md) · [Pinned provenance](data/provenance.json) |
